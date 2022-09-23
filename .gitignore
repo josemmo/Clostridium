@@ -1,0 +1,5 @@
+# Raw datasets
+data/IR
+data/MALDI
+data/*.xlsx
+
