@@ -3,3 +3,7 @@ data/IR
 data/MALDI
 data/*.xlsx
 
+# Logs
+/logs
+/wandb
+/__pycache__

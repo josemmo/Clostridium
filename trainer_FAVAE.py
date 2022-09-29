@@ -1,12 +1,13 @@
-import torch
+from sklearn.model_selection import train_test_split
 import numpy as np
-from torchvision import datasets
-from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 import pandas as pd
 import argparse
 import favae as sshiba
 import pickle
+from imblearn.over_sampling import RandomOverSampler
+from sklearn.preprocessing import OneHotEncoder
+
 
 parser = argparse.ArgumentParser(description='SSHIBA IMG VAE with adapative learning over Z latent space')
 parser.add_argument('--lr', type=float, default=1.0,
@@ -15,74 +16,24 @@ args = parser.parse_args()
 
 print(args.lr)
 
-print("Loading pretrained vanillaVAE...")
-pretrained_vae_path = open('../condition_a_VAE/results/pretrained_celeba_vanillavae_v3.pickle', 'rb')
-pretrained_vae = pickle.load(pretrained_vae_path)
-pretrained_vae_path.close()
-del pretrained_vae_path
+# ============ Load data ===================
+with open('data/MALDI/data_processedMALDIQuant.pickle', 'rb') as handle:
+    data = pickle.load(handle)
 
-# ============ CREATE THE PRETRAINED VIEW ===================
-print("Creating mu_Q and stdQ...")
-mu, var = pretrained_vae['model'].update_x()
-q_dist = torch.distributions.Normal(loc=torch.Tensor(mu), scale=torch.Tensor(np.sqrt(var)))
-pretrained_X = q_dist.sample().numpy()
-del q_dist, mu, var
-print(pretrained_X)
-torch.cuda.empty_cache()
+maldis = data['maldis']
+y3 = data['labels_3cat']
+masses = data['masses']
 
-# ============ READ CELEBA IMAGES ===================
-print("Loading dataset")
-celeba = datasets.ImageFolder(root="../datasets/celeba/", transform=transforms.Compose([
-                                  transforms.Resize((64, 64)),
-                                  transforms.ToTensor()
-                              ]))
+# ============ Preprocessing ===================
+ros = RandomOverSampler()
+maldis_resampled, y_resampled = ros.fit_resample(maldis, y3)
 
-print("Reading dataset")
-loader = DataLoader(celeba, batch_size=len(celeba))
+x_train, x_test, y_train, y_test = train_test_split(maldis_resampled, y_resampled, train_size=0.6)
 
-celeba_numpy = next(iter(loader))[0]
-celeba_train = celeba_numpy[:30000, :, :, :]
-del celeba_numpy, loader, celeba
-
-# ============ READ LABELS ===================
-print("Reading labels")
-def get_annotation(fnmtxt, verbose=True):
-    if verbose:
-        print("_"*70)
-        print(fnmtxt)
-    
-    rfile = open(fnmtxt , 'r' ) 
-    texts = rfile.read().split("\n") 
-    rfile.close()
-
-    columns = np.array(texts[1].split(" "))
-    columns = columns[columns != ""]
-    df = []
-    for txt in texts[2:]:
-        txt = np.array(txt.split(" "))
-        txt = txt[txt!= ""]
-    
-        df.append(txt)
-        
-    df = pd.DataFrame(df)
-
-    if df.shape[1] == len(columns) + 1:
-        columns = ["image_id"]+ list(columns)
-    df.columns = columns   
-    df = df.dropna()
-    if verbose:
-        print(" Total number of annotations {}\n".format(df.shape))
-        print(df.head())
-    ## cast to integer
-    for nm in df.columns:
-        if nm != "image_id":
-            df[nm] = pd.to_numeric(df[nm],downcast="integer")
-    return(df)
-attr = get_annotation('../datasets/celeba/list_attr_celeba.txt', verbose=False).iloc[:30000, :]
-
-attr_list = ["image_id", "Smiling", "Wearing_Lipstick", "Male"]
-target = attr[attr_list].replace(-1,0)
-target_train = target.iloc[:30000, 1:].to_numpy()
+ohe = OneHotEncoder(sparse=False)
+ohe.fit(y3.reshape(-1,1))
+y_train_ohe = ohe.transform(y_train.reshape(-1,1))
+y_test_ohe = ohe.transform(y_test.reshape(-1,1))
 
 # ============ FAVAE MODEL ===================
 print("Creating model")
@@ -92,15 +43,13 @@ store = False
 
 myModel_new = sshiba.SSHIBA(hyper_parameters['sshiba']['myKc'], hyper_parameters['sshiba']['prune'], latentspace_lr=hyper_parameters['sshiba']['latentspace_lr'])
 
-#Pretrained vanilla vae latent space
-input_pre = myModel_new.struct_data(pretrained_X, 'reg')
-#Huge VAE
-betaVAE = myModel_new.struct_data(celeba_train.numpy(), 'img', latent_dim=100, lr=1e-3, epochs=15, dataset="celeba")
+# Full MALDI data
+input_pre = myModel_new.struct_data(np.vstack((x_train, x_test)), 'reg')
 # Labels
-labels = myModel_new.struct_data(target_train, 'mult')
+labels = myModel_new.struct_data(y_train_ohe, 'mult')
 # ============ FAVAE TRAINING ===================
 print("Training model")
-myModel_new.fit(betaVAE, input_pre, labels,
+myModel_new.fit(input_pre, labels,
             max_iter=hyper_parameters['sshiba']['max_it'],
             pruning_crit=hyper_parameters['sshiba']['pruning_crit'],
             verbose=1,

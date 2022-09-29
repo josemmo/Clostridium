@@ -418,7 +418,7 @@ class SSHIBA(object):
         """
         #### WANDB information
         print("Inicializando WANDB")
-        self.wandb = wandb.init(project="vae-sshiba", group='Multi-VAE comparison', job_type='favae_mnist', entity="alexjorguer")
+        self.wandb = wandb.init(project="clostridium", group='only-MALDI', job_type='maldi_maldiquant', entity="alexjorguer")
         print("WANDB listo")
         #### WANDB information
         verboseprint = print if verbose else lambda *a, **k: None
