@@ -16,14 +16,15 @@ args <- commandArgs(trailingOnly = TRUE)
 
 library("MALDIquant")
 library("MALDIquantForeign")
+library("stringr")
 
 ###############################################################################
 ## Load data
 ###############################################################################
-path <- "/Users/alexjorguer/Downloads/Clostridium/Ordenados"
-path_load <- paste0(path, '/Otros/023')
+path_train <- args[1]
+path_export <- paste(args[2], "/")
 # path_load <- paste0(path, args[1])
-spectra1 <- importBrukerFlex(path_load)
+spectra1 <- importBrukerFlex(path_train)
 
 ##### PREPROCESS
 
@@ -37,18 +38,15 @@ spectrabase <- removeBaseline(spectrasmooth, method="TopHat")
 samples <- factor(sapply(sapply(spectrabase, function(x)metaData(x)$file), function(x)str_split(x, "/", simplify=TRUE))[9,])
 avgSpectra <- averageMassSpectra(spectrabase, labels=samples, method="mean")
 # Step 5: alignment
-spectra_al <- alignSpectra(avgSpectra, halfWindowSize=20, SNR=2, tolerance=600e-6, warpingMethod="lowess")
+#spectra_al <- alignSpectra(avgSpectra, halfWindowSize=20, SNR=2, tolerance=600e-6, warpingMethod="lowess")
 # Step 6: the intensity is calibrated using the total ion current (TIC)
-spectra_tic <- calibrateIntensity(spectra_al, method="TIC")
+spectra_tic <- calibrateIntensity(avgSpectra, method="TIC")
 
 ###############################################################################
 ## Save data
 ###############################################################################
-path_save <- paste0(path, '/mzml/Otros/')
-
 # path_save <- paste0(path, args[2])
 # save(spectra1, file=args[2])
 ## Export
 # exportMzMl(spectra_tic, path=path_save)
-for (i in c(1:length(spectra_tic))){ export(spectra_tic[i], file=paste(path_save, attributes(spectra_tic[i])), type="csv", force=TRUE)}
-
+for (i in c(1:length(spectra_tic))){ export(spectra_tic[i], file=paste(path_export, attributes(spectra_tic[i])), type="csv", force=TRUE)}

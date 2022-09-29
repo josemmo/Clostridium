@@ -4,8 +4,7 @@ import os
 
 results = {}
 
-
-maldi_path = "data/MALDI/mzml"
+maldi_path = "data/MALDI/allavgtogether_noalign"
 # READ DATA MZML
 listOfFiles = list()
 for (dirpath, dirnames, filenames_rep) in os.walk(maldi_path):
@@ -38,5 +37,5 @@ y3[np.where((labels!=181) & (labels!=27))[0]]=2
 import pickle
 
 data = {'maldis': maldis, 'masses': masses, 'ids': ids,'labels_raw':labels, 'labels_3cat': y3}
-with open('./data/MALDI/data_processedMALDIQuant.pickle', 'wb') as handle:
+with open('./data/MALDI/data_processedMALDIQuant_noalign.pickle', 'wb') as handle:
     pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)

@@ -1,0 +1,12 @@
+imbalanced_learn==0.9.1
+imblearn==0.0
+matplotlib==3.6.0
+numpy==1.23.1
+pandas==1.5.0
+pyro==3.16
+pyro_ppl==1.8.2
+scikit_learn==1.1.2
+scipy==1.9.1
+seaborn==0.12.0
+torch==1.12.1
+torchvision==0.13.1

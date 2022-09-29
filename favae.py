@@ -6,7 +6,7 @@ from scipy.stats import norm
 from sklearn.preprocessing import label_binarize
 import math
 import sys
-from sklearn.metrics import hamming_loss
+from sklearn.metrics import balanced_accuracy_score, hamming_loss
 from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import r2_score
@@ -880,6 +880,7 @@ class SSHIBA(object):
                         # Updating the mean and variance of t* for the SS case
                         self.update_t(m)
                         self.t[m]['mean'][self.SS_mask[m]] = q.tS[m]['mean'][self.SS_mask[m]]
+                        #print(np.argmax(self.t[m]['mean'][self.SS_mask[m]].reshape(-1, 3), axis=1))
                 #Update of the variable tau
                 self.update_tau(m)
 
@@ -1407,6 +1408,7 @@ class SSHIBA(object):
                         arg['data'] = self.center_K(arg['data'])
 
                 if type(arg) == dict:
+
                     # NEW FOR IMAGES
                     if arg['method'] == 'img':
                         X_mean, X_cov = self.img_vae[m_in[m]].update_x(arg['data'])
@@ -1417,6 +1419,9 @@ class SSHIBA(object):
                     if arg['method'] == 'mult':
                         X_mean = np.log(np.abs((arg['data']-0.05))/(1 - np.abs((arg['data']-0.05))))
                         self.Z_mean += np.dot(X_mean - q.b[m_in[m]]['mean'], q.W[m_in[m]]['mean']) * q.tau_mean(m_in[m])
+                    if arg['method'] == 'reg':
+                        print("MALDI input")
+                        self.Z_mean += np.dot(arg['data'] - q.b[m_in[m]]['mean'], q.W[m_in[m]]['mean']) * q.tau_mean(m_in[m])
                 else:
                     for (m,x) in enumerate(arg):
                         if x['method'] == 'cat': #categorical
