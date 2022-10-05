@@ -4,11 +4,11 @@ data/MALDI
 data/*.xlsx
 
 # Results because models are too heavy for github
-./results
+/results/
 
 # Logs
-/logs
-/wandb
+/logs/
+/wandb/
 /__pycache__
-results/RandomForest_noalignment.pickle
 results/sshiba_reg_noalignment.pickle
+results/RandomForest_noalignment.pickle
