@@ -13,7 +13,6 @@ $Rpath --vanilla preprocess_maldi.R $MaldiPath results/data_processed
 
 echo MALDI data preprocessed!
 
-
 echo Insert the path to the Python interpreter:
 read Pypath
 

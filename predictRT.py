@@ -6,7 +6,7 @@ from sklearn.metrics import balanced_accuracy_score
 import argparse
 
 parser = argparse.ArgumentParser(description='Predicts the ribotype given a Clostridium MALDI-TOF preprocessed data file.')
-parser.add_argument('--maldi_path', type=float, default=1.0,
+parser.add_argument('--maldi_path',
                   help='Path to the MALDI data processed by MALDIquant.')
 args = parser.parse_args()
 
