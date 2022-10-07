@@ -11,7 +11,7 @@ args <- commandArgs(trailingOnly = TRUE)
 ## MALDIquant()
 ## MALDIquantForeign()
 ##
-#install.packages(c("MALDIquant","MALDIquantForeign"))
+#install.packages(c("MALDIquant","MALDIquantForeign", "stringr"))
 ##############################################################################
 
 library("MALDIquant")
@@ -21,17 +21,19 @@ library("stringr")
 ###############################################################################
 ## Load data
 ###############################################################################
-path_train <- "testdata"
 replicates <- args[1]
-if (replicates) {id_pos<-4} else {id_pos<-5}
+if (replicates>0) {id_pos<-5} else {id_pos<-4}
 
-path_train <- args[2]
-path_export <- paste(args[2], "/")
+path_train <- paste(getwd(), "/data_to_predict", sep="")
+path_export <- paste(getwd(), "/results/data_maldiquant", sep="")
+
+sprintf("Loading MALDI raw data...")
 
 spectra1 <- importBrukerFlex(path_train)
 
 ##### PREPROCESS
 
+sprintf("Preprocessing MALDI raw data...")
 #Step 1: the measured intensity is transformed with a square-root method to stabilize the variance
 spectraint <- transformIntensity(spectra1, method="sqrt")
 # Step 2: smoothing using the Savitzky–Golay algorithm with half-window-size 5 is applied
@@ -39,14 +41,19 @@ spectrasmooth <- smoothIntensity(spectraint, method="SavitzkyGolay", halfWindowS
 # Step 3: an estimate of the baseline 
 spectrabase <- removeBaseline(spectrasmooth, method="TopHat")
 # Step 4: replicates handling
-id_idx <- length(str_split(metaData(spectrabase[[1]])$file, "/", simplify=TRUE))-id_pos
-samples <- factor(sapply(sapply(spectrabase, function(x)metaData(x)$file), function(x)str_split(x, "/", simplify=TRUE))[id_idx,])
+if (replicates>0){
+id_idx <- length(str_split(metaData(spectrabase[[1]])$file, "\\\\", simplify=TRUE))-id_pos
+samples <- factor(sapply(sapply(spectrabase, function(x)metaData(x)$file), function(x)str_split(x, "\\\\", simplify=TRUE))[id_idx,])
 avgSpectra <- averageMassSpectra(spectrabase, labels=samples, method="mean")
+} else { avgSpectra <- spectrabase
+}
 # Step 5: alignment
 #spectra_al <- alignSpectra(avgSpectra, halfWindowSize=20, SNR=2, tolerance=600e-6, warpingMethod="lowess")
 # Step 6: the intensity is calibrated using the total ion current (TIC)
 spectra_tic <- calibrateIntensity(avgSpectra, method="TIC")
 
+sprintf("MALDI RAW data preprocessed.")
+sprintf("Storing MALDI processed data...")
 ###############################################################################
 ## Save data
 ###############################################################################
@@ -55,5 +62,6 @@ spectra_tic <- calibrateIntensity(avgSpectra, method="TIC")
 ## Export
 # exportMzMl(spectra_tic, path=path_save)
 for (i in c(1:length(spectra_tic))){ 
-    export(spectra_tic[i], file=paste(path_export, attributes(spectra_tic[i])), type="csv", force=TRUE)
+    export(spectra_tic[i], file=paste(path_export, attributes(spectra_tic[i]), sep=""), type="csv", force=TRUE)
     }
+sprintf("MALDI processed data stored at %s", path_export)

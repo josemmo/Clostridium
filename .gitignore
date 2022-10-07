@@ -1,14 +1,15 @@
 # Raw datasets
-data/IR
-data/MALDI
-data/*.xlsx
+dev/data/
+dev/cloverdata
 
-# Results because models are too heavy for github
+# Results of longitudinal study
 /results/
-/testdata/
+/data_to_predict/
 
 # Logs
 /logs/
-/wandb/
+dev/wandb/
 /__pycache__
-data/test/
+
+# Models trained (too big for GitHub)
+/models/

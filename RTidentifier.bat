@@ -1,13 +1,18 @@
 @echo off
-set /p Rpath=Insert the path to the R interpreter:
-set /p MaldiPath=Insert the path to MALDIs data:
-set /p ExportPath=Insert the path where you want to store the results:
+
+set /p datalocated=Are the MALDI-TOFs to predict located at ./data_to_predict?
+
+set /p Replicates=Has the MALDI any replicates?:
 
 echo Preprocessing MALDI using MALDIQuant...
 
-%Rpath% --vanilla preprocess_maldi.R %MaldiPath% %ExportPath%
+Rscript .\preprocess_maldi.R %Replicates%
 
 echo MALDI data preprocessed!
 
-echo Predicting MALDI data...
 
+echo Predicting Ribotypes using python models...
+
+python predictRT.py
+
+echo Prediction done, see you.
