@@ -1,7 +1,8 @@
 # Raw datasets
 dev/data/
 dev/cloverdata
-
+/data/
+/testdata/
 # Results of longitudinal study
 /results/
 /data_to_predict/
