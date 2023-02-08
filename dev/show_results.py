@@ -9,7 +9,7 @@ with open('data/MALDI/data_processedMALDIQuant_noalign.pickle', 'rb') as handle:
 masses = data['masses']
 meanmas = np.mean(masses, axis=0)
 
-with open('./results/using_only_peaksRF.pickle', 'rb') as handle:
+with open('./results/RandomForest_noalignment.pickle', 'rb') as handle:
     results_peaks = pickle.load(handle)
 
 with open('./results/sshiba_reg_noalignment.pickle', 'rb') as handle:

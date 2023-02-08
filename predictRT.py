@@ -2,7 +2,13 @@ import numpy as np
 import pickle
 import pandas as pd
 import os
-from datetime import datetime
+import argparse
+# Import RandomOverSampler to balance the dataset
+from imblearn.over_sampling import RandomOverSampler
+from sklearn.manifold import TSNE
+from matplotlib import pyplot as plt
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 print("=============================================================")
 print("Creating folders to store information...")
@@ -34,80 +40,100 @@ for filepath in listOfFiles:
     m = pd.read_csv(filepath)
     maldis.append(m["intensity"].values[0:18000])
     masses.append(m["mass"].values[0:18000])
-    ids.append(file.split("_")[-2])
-maldis = np.vstack(maldis)
-meanmass = np.mean(np.vstack(masses), axis=0)
+    ids.append(filepath.split("/")[-2].split(" ")[-1])
+maldis = np.vstack(maldis)*1e4
+
 print("MALDI data loaded.")
 print("Total nº of samples: ", str(len(maldis)))
-print("=============================================================")
-print("Loading RF model...")
-
-with open('./models/RandomForest_noalignment.pickle', 'rb') as handle:
-    rfload = pickle.load(handle)
-rf = rfload['fullRFmodel']
-rf_peaks = rfload['RFonlyusingpeaks']
-
-print("Predicting using RF model...")
-
-pred_rf = rf.best_estimator_.predict(maldis)
-pred_proba_rf = np.round(np.max(rf.best_estimator_.predict_proba(maldis), axis=1), 2)-0.01
-
-pred_rfpeaks = rf_peaks.best_estimator_.predict(maldis[:, rfload['imp_peaks_location']])
-pred_proba_rfpeaks = np.round(np.max(rf_peaks.best_estimator_.predict_proba(maldis[:,rfload['imp_peaks_location']]), axis=1), 2)-0.01
-print("=============================================================")
-print("Loading SSHIBA model...")
-print("This will take longer, wait a little bit.")
-with open('./models/sshiba_reg_noalignment.pickle', 'rb') as handle:
-    ss = pickle.load(handle)
-print("SSHIBA loaded!")
-print("Predicting using SSHIBA...")
-model = ss['model']
-maldis_sshiba = model.struct_data(X=maldis, method="reg")
-pred = model.predict([0,1], [1], maldis_sshiba)
-
-pred_ss = np.argmax(pred['output_view1']['mean_x'], axis=1)
-pred_proba_ss = np.round(np.max(pred['output_view1']['mean_x'], axis=1), 2)
-print("=============================================================")
-
-print("Creating excel with results..")
-results = {"ID": ids, "Pred RF full": pred_rf, "Prob RF full": pred_proba_rf, "Pred RF peaks": pred_rfpeaks, "Prob RF peaks": pred_proba_rfpeaks,
-           "Pred SSHIBA": pred_ss, "Prob SSHIBA": pred_proba_ss, "Real RT": np.nan*np.zeros(pred_proba_rf.shape)}
-df = pd.DataFrame(results)
-df = df.set_index("ID")
-df = df.replace(2, "Other").replace(0, "RT027").replace(1, "RT181")
-
-t= datetime.timestamp(datetime.now())
-
-name_df = "./results/prediction_"+str(t)+".xlsx"
-df.to_excel(name_df)
-
-print("Excel created and stored at: "+name_df)
-print("=============================================================")
 
 
-print ("Plotting ROIs for each MALDI-TOF...")
-from matplotlib import pyplot as plt
-z1 = np.where((meanmass > 2600) & (meanmass < 2700)) 
-z2 = np.where((meanmass > 3260) & (meanmass < 3360)) 
-z3 = np.where((meanmass > 4250) & (meanmass < 4350)) 
-z4 = np.where((meanmass > 4900) & (meanmass < 5000)) 
-z5 = np.where((meanmass > 6600) & (meanmass < 6700)) 
-z6 = np.where((meanmass > 6700) & (meanmass < 6800)) 
+# ============ Load model ===================
+print("Loading model...")
 
-zs = [z1, z2, z3, z4, z5, z6]
+models = [ "ksshiba_lin", "rf", "favae_vanilla"]
+paths = [ "results/ksshiba_lin_maldiquant_fulldataset_cpu.pickle", "results/rf.pickle", "results/favae_vanilla_maldiquant_fulldataset_cpu.pickle", ]
+# models = ["ksshiba_lin", "rf"]
+# paths = ["results/ksshibalin.pickle", "results/rf.pickle"]
 
-for i, m in enumerate(maldis):
-    fig, ax = plt.subplots(2, 3, figsize=(30,10))
-    f, c = 0,0
-    for j,z in enumerate(zs):
-        ax[f, c].plot(meanmass[z], m[z])
-        ax[f,c].set_title("ROI "+str(j)+": from "+str(np.round(meanmass[z][0],2))+"Da to "+str(np.round(meanmass[z][-1],2))+"Da")
-        c+=1
-        if c==3:
-            c=0
-            f+=1
-    fig.suptitle('ROIs of '+str(ids[i])+"'s MALDI-TOF")
-    pathsavepng = './results/images/rois_'+str(ids[i])+'.png'
-    fig.savefig(pathsavepng, format='png', dpi=300)
+results = pd.DataFrame({"id": ids})
+for p,m in zip(paths, models):
+    # Load model
+    with open(p, "rb") as handle:
+        model = pickle.load(handle)
+    # Predict
+    print("Predicting with {} model...".format(m))
+    if m == "ksshiba_lin":
 
-print("Images of ROIs stored at "+pathsavepng)
+        with open("data/MALDI/data_processedMALDIQuant_noalign.pickle", "rb") as handle:
+            original = pickle.load(handle)
+        malditrain = original["maldis"] * 1e4
+    
+        ros = RandomOverSampler()
+        maldis_resampled, y_resampled = ros.fit_resample(malditrain, original["labels_3cat"])
+        maldis_test = model['model'].struct_data(
+                        maldis,
+                        method="reg",
+                        V=maldis_resampled,
+                        kernel="linear",
+                    )
+        y_pred, Z_test_mean, Z_test_cov = model['model'].predict([0], [1], maldis_test)
+        gray_pred = y_pred['output_view1']['mean_x']
+        y_pred_int = np.argmax(gray_pred, axis=1)
+        value_pred = np.max(gray_pred, axis=1)
+    elif m == "favae_vanilla" or m == "favae_1d":
+        maldis_test = model['model'].struct_data(
+                        maldis,
+                        method="vae",
+                        latent_dim=20,
+                        lr=1e-3,
+                        dataset="clostri",
+                    )
+        y_pred, Z_test_mean, Z_test_cov = model['model'].predict([0], [1], maldis_test)
+        gray_pred = y_pred['output_view1']['mean_x']
+        y_pred_int = np.argmax(gray_pred, axis=1)
+        value_pred = np.max(gray_pred, axis=1)
+
+        Z_mean = model['model'].q_dist.Z['mean']
+        # Project Z_mean and Z_test_mean to 3D using t-SNE
+        tsne = TSNE(n_components=3, random_state=0)
+        Z_mean_3d = tsne.fit_transform(np.vstack((Z_mean, Z_test_mean)))
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        # Train samples
+        ax.scatter(Z_mean_3d[:Z_mean.shape[0], 0], Z_mean_3d[:Z_mean.shape[0], 1], Z_mean_3d[:Z_mean.shape[0], 2], c=np.argmax(model['model'].t[1]['data'], axis=1)[:Z_mean.shape[0]], cmap="Set2", label="Train samples")
+        # Test samples
+        ax.scatter(Z_mean_3d[Z_mean.shape[0]:, 0], Z_mean_3d[Z_mean.shape[0]:, 1], Z_mean_3d[Z_mean.shape[0]:, 2], c=y_pred_int, cmap=['green', 'blue'], marker="s", s=200, label="Test samples")
+        plt.legend()    
+        # Plot
+
+        # from sklearn.manifold import TSNE
+        # tsne = TSNE(n_components=3, random_state=0)
+        # Z_mean_2d = tsne.fit_transform(np.vstack((Z_mean, Z_test_mean)))
+        # # Plot
+        # import matplotlib.pyplot as plt
+        # import seaborn as sns
+        # plt.figure(figsize=(10, 10))
+        # # Train samples
+
+        # sns.scatterplot(x=Z_mean_2d[:Z_mean.shape[0], 0], y=Z_mean_2d[:Z_mean.shape[0], 1], hue=np.argmax(model['model'].t[1]['data'], axis=1)[:Z_mean.shape[0]], palette="Set2", label="Train samples")
+        # # Test samples
+        # sns.scatterplot(x=Z_mean_2d[Z_mean.shape[0]:, 0], y=Z_mean_2d[Z_mean.shape[0]:, 1], hue=y_pred_int, palette=['green', 'blue'], marker="s", s=200, label="Test samples")
+
+
+    elif m == "rf":
+        y_pred_int = model['model'].predict(maldis)
+        value_pred = np.max(model['model'].predict_proba(maldis), axis=1)
+
+    print("Saving results...")
+    results[m+'_category'] = y_pred_int
+    results[m+'_probability'] = value_pred
+
+
+# Map ribotypes: 0 is RT027, 1 is RT181, 2 is Others
+results["ksshiba_lin_category"] = results["ksshiba_lin_category"].map({0: "RT027", 1: "RT181", 2: "Others"})
+results["rf_category"] = results["rf_category"].map({0: "RT027", 1: "RT181", 2: "Others"})
+results["favae_vanilla_category"] = results["favae_vanilla_category"].map({0: "RT027", 1: "RT181", 2: "Others"})
+# Save results to excel
+results.to_excel("results/predictions_ultimatanda73.xlsx", index=False)
+
+

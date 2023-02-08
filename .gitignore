@@ -10,6 +10,8 @@ dev/cloverdata
 /logs/
 dev/wandb/
 /__pycache__
+data/test/
+/checkpoints/
+/wandb/
+/dev/
 
-# Models trained (too big for GitHub)
-/models/
