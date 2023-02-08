@@ -16,7 +16,7 @@ def preprocessing_apply():
     subprocess.call (["/usr/bin/Rscript", "--vanilla", "preprocess_maldi.R", file_path, storing_path])
 
 def model1_apply():
-    # Add code to run model 1 here
+    subprocess.call(["conda run -n clostridium", "predictRT.py", "--maldi_path", storing_path])
     pass
 
 def model2_apply():

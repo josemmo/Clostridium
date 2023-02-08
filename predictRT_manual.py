@@ -185,3 +185,43 @@ results["id"] = results["id"].astype(int)
 # Save results to excel
 results.to_excel("results/predictions_ultimatanda73.xlsx", index=False)
 
+
+# ======================================== Check results in test ========================================
+# Load test data from an excel
+test = pd.read_excel("testdata/TODAS LAS CEPAS CLOSTRIS.xlsx")
+
+# Select columns from H to K
+test = test.iloc[:, 7:9]
+
+# Drop rows with NaN
+test.dropna(inplace=True)
+
+# Rename columns: Nuevas para analizar -> id, Unnamed: 8 -> true_category
+test.rename(columns={"Nuevas para analizar": "id", "Unnamed: 8": "true_category"}, inplace=True)
+
+# Cast column id to int
+test["id"] = test["id"].astype(int)
+
+# Map ribotypes: 027 is RT027, 181 is RT181, all other possible values are Others
+test["true_category"] = test["true_category"].map({'027': "RT027", '181': "RT181"})
+test["true_category"] = test["true_category"].fillna("Others")
+
+
+# Merge results with test data
+test = test.merge(results, on="id")
+
+# Import accuracy score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+
+# Calculate accuracy for each model
+for m in models:
+    print(m)
+    print("Accuracy: ", accuracy_score(test["true_category"], test[m+"_category"]))
+    print("Precision: ", precision_score(test["true_category"], test[m+"_category"], average="weighted"))
+    print("Recall: ", recall_score(test["true_category"], test[m+"_category"], average="weighted"))
+    print("F1: ", f1_score(test["true_category"], test[m+"_category"], average="weighted"))
+    print("Confusion matrix: ")
+    print(confusion_matrix(test["true_category"], test[m+"_category"]))
+    print("")
+
+
