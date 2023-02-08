@@ -14,7 +14,7 @@ import topf
 # Import tqdm
 from tqdm import tqdm
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 # parser = argparse.ArgumentParser(description='SSHIBA IMG VAE with adapative learning over Z latent space')
 # parser.add_argument('--lr', type=float, default=1.0,
 #                   help='Learning rate value for adapative Z learning. Default = 1 (no adaptative learning)')
@@ -100,16 +100,16 @@ myModel_new = sshiba.SSHIBA(
 
 
 # MALDI as a VAE
-maldis = myModel_new.struct_data(np.vstack((x_train, x_test)), "vae", latent_dim=50, lr=1e-3, dataset="clostri"
-)
-maldis_test = myModel_new.struct_data(x_test, "vae", latent_dim=20, lr=1e-3, dataset="clostri")
+# maldis = myModel_new.struct_data(np.vstack((x_train, x_test)), "vae", latent_dim=20, lr=1e-3, dataset="clostri"
+# )
+# maldis_test = myModel_new.struct_data(x_test, "vae", latent_dim=20, lr=1e-3, dataset="clostri")
 
 # MALDI as a kernelized version
-# maldis = myModel_new.struct_data(np.vstack((x_train, x_test)),
-#     method="reg",
-#     V=np.vstack((x_train, x_test)),
-#     kernel="linear",
-# )
+maldis = myModel_new.struct_data(np.vstack((x_train, x_test)),
+    method="reg",
+    V=np.vstack((x_train, x_test)),
+    kernel="rbf",
+)
 # maldis_test = myModel_new.struct_data(
 #     x_test,
 #     method="reg",
@@ -201,5 +201,5 @@ t2 = time.time()
 
 import pickle
 store = {"model": myModel_new}
-with open('./results/favae_vanilla_maldiquant_fulldataset_cpu.pickle', 'wb') as handle:
+with open('./results/ksshibarbf.pickle', 'wb') as handle:
     pickle.dump(store, handle, protocol=pickle.HIGHEST_PROTOCOL)
