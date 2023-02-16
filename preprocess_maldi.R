@@ -21,11 +21,11 @@ library("stringr")
 ###############################################################################
 ## Load data
 ###############################################################################
-replicates <- args[1]
+replicates <- args[3]
 if (replicates>0) {id_pos<-5} else {id_pos<-4}
 
-path_train <- paste(getwd(), "/data_to_predict", sep="")
-path_export <- paste(getwd(), "/results/data_maldiquant", sep="")
+path_train <- args[1]
+path_export <- args[2]
 
 sprintf("Loading MALDI raw data...")
 

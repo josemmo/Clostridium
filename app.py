@@ -4,19 +4,21 @@ import subprocess
 
 def browse_file():
     global file_path
-    file_path = filedialog.askopenfilename()
+    file_path = filedialog.askdirectory()
+    file_path = file_path.replace("/", "\\")
     dataset_label.config(text=file_path)
 
 def browse_directory():
     global storing_path
     storing_path = filedialog.askdirectory()
+    storing_path = storing_path.replace("/", "\\")
     results_label.config(text=storing_path)
 
 def preprocessing_apply():
-    subprocess.call (["/usr/bin/Rscript", "--vanilla", "preprocess_maldi.R", file_path, storing_path])
+    subprocess.call (["Rscript", "--vanilla", "preprocess_maldi.R", file_path, storing_path, '0'])
 
 def model1_apply():
-    subprocess.call(["conda run -n clostridium", "predictRT.py", "--maldi_path", storing_path])
+    subprocess.call(["conda run -n clostridium", ".\\predictRT.py", "--maldi_path", storing_path])
     pass
 
 def model2_apply():
@@ -25,7 +27,7 @@ def model2_apply():
 
 # Create the main window
 root = tk.Tk()
-root.title("Python GUI")
+root.title("Minimal AutoCRT")
 root.geometry("500x500")
 
 # Add a button to browse files
@@ -48,6 +50,11 @@ results_label.pack()
 preprocessing_var = tk.IntVar()
 preprocessing_checkbox = tk.Checkbutton(root, text="Preprocessing", variable=preprocessing_var)
 preprocessing_checkbox.pack()
+
+# Add a checkbox for replicates, if selected replicates is a true boolean
+replicates_var = tk.IntVar()
+replicates_checkbox = tk.Checkbutton(root, text="Replicates", variable=replicates_var)
+replicates_checkbox.pack()
 
 # Add a button to run preprocessing
 preprocessing_button = tk.Button(root, text="Apply", command=preprocessing_apply)
