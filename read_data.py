@@ -1,44 +1,50 @@
-import os
-import numpy as np
 import pandas as pd
-
-# Read all folders tree that are under /data/all_maldi/
-path = "./data/all_maldi/initial/027"
-listOfFiles = list()
-for (dirpath, dirnames, filenames_rep) in os.walk(path):
-    listOfFiles += [os.path.join(dirpath, file) for file in filenames_rep]
-
-# Read an excel
-errores = pd.read_excel(
-    "/export/usuarios01/alexjorguer/Datos/HospitalProject/Clostridium/data/guiacepas.xlsx"
-)
-
-# Get the name of the strain which is the 5th element of the path
-strain_path = [listOfFiles[i].split("/")[:6] for i in range(len(listOfFiles))]
-# Remove duplicates from strain_path without using tuples
-strain_path = [list(x) for x in set(tuple(x) for x in strain_path)]
-
-for i in strain_path:
-    full_strain_name = i[5]
-    old_path = i.copy()
-    # split by whitespaces and get the last item
-    strain_name = full_strain_name.split(" ")[-1]
-    if len(strain_name.split("-")[0]) > 3:
-        incorrect_name = reversed(strain_name.split("-"))
-        correct_name = "-".join(incorrect_name)
-        i[5] = correct_name
-        # Rename the folder
-
-        # Remove old path from strain_path list
-    else:
-        i[5] = strain_name
-
-    name = i[5].split("-")[1]
-    # Find which cell from errores has the correct name
-    correct_name = errores[errores["N cepa"] == name]["correct_name"].values[0]
-
-    os.rename("/".join(old_path), "/".join(i))
+import os
+import pickle
+import numpy as np
 
 
-# join them
-strain_path = ["/".join(strain_path[i]) for i in range(len(strain_path))]
+def read_train_data(path):
+    # os.walk all the files in the data folder:
+    listOfFiles = list()
+    for (dirpath, dirnames, filenames) in os.walk(path):
+        listOfFiles += [os.path.join(dirpath, file) for file in filenames]
+
+    # Read labels from todas_labels.xlsx
+    labels = pd.read_excel("data/todas_labels.xlsx", header=None)
+    ids = [int(file.split("/")[-1].split("_")[0]) for file in listOfFiles]
+
+
+    # Read each csv of listOfFiles and append it to df to the MALDI column
+    data = []
+    for file in listOfFiles:
+        d = pd.read_csv(file)
+        id = int(file.split("/")[-1].split("_")[0])
+        data.append(
+            [
+                d["mass"].values[:18000],
+                d["intensity"].values[:18000],
+                str(labels[labels[1]==id][2].values[0]),
+            ]
+        )
+    df = pd.DataFrame(data, columns=["MALDI_mass", "MALDI_int", "label"])
+
+    # Substitute the label with the number of the class: '027' -> 0, '181' -> 1, rest -> 2
+    df["label"] = df["label"].replace({"027": 0, "181": 1})
+    # All other labels are 2
+    df["label"] = df["label"].replace(
+        {"001": 2, "002": 2, "014": 2, "017": 2, "023": 2, "078": 2, "106": 2, "207": 2}
+    )
+
+    # Store a pickle with a dictionary with the data
+    maldis = np.vstack(df["MALDI_int"].values)
+    masses = np.vstack(df["MALDI_mass"].values)
+    labels = df["label"].values
+
+    data = {"maldis": maldis, "masses": masses, "labels": labels}
+    # Save the data
+    with open("data/data_processed_noreplicas_090502023.pkl", "wb") as handle:
+        pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+def read_test_data(path):
+

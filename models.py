@@ -2,7 +2,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import balanced_accuracy_score
 from imblearn.over_sampling import RandomOverSampler
 from matplotlib import pyplot as plt
 import numpy as np
@@ -12,7 +11,7 @@ import numpy as np
 
 
 class RF:
-    def __init__(self, n_estimators=128, max_depth=10):
+    def __init__(self, n_estimators=128, max_depth=10, cv=5):
         self.n_estimators = n_estimators
         self.max_depth = max_depth
         self.cv = 5
@@ -38,7 +37,7 @@ class RF:
         grid_results = grid.fit(x_train, y_train)
         self.model = grid_results.best_estimator_
 
-        return self.acc
+        return self.model
 
     def save(self, path):
         model = {"model": self.model}
