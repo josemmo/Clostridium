@@ -15,4 +15,5 @@ data/test/
 /checkpoints/
 /wandb/
 /dev/
+/old_dev/
 

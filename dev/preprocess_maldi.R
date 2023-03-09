@@ -24,8 +24,8 @@ library("stringr")
 replicates <- args[1]
 if (replicates>0) {id_pos<-5} else {id_pos<-4}
 
-path_train <- paste(getwd(), "/data_to_predict", sep="")
-path_export <- paste(getwd(), "/results/data_maldiquant", sep="")
+path_train <- paste(getwd(), "/espectros/exp1_275", sep="")
+path_export <- paste(getwd(), "/results/exp1_275_mzml", sep="")
 
 spectra1 <- importBrukerFlex(path_train)
 
