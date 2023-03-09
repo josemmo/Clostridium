@@ -36,6 +36,8 @@ def read_train_data(path):
         {"001": 2, "002": 2, "014": 2, "017": 2, "023": 2, "078": 2, "106": 2, "207": 2}
     )
 
+    # TODO: ME HE QUEDADO AQUÍ, FALTA CLASIFICAR EL RT 165 COMO 2
+
     # Store a pickle with a dictionary with the data
     maldis = np.vstack(df["MALDI_int"].values)
     masses = np.vstack(df["MALDI_mass"].values)
