@@ -20,7 +20,7 @@ def main(model, config, depth=None, wandbflag=False):
         config = yaml.load(file, Loader=yaml.FullLoader)
 
     main_path = config["main_path"]
-    maldi_data_path = main_path + "data/data_processed_noreplicas_090502023.pkl"
+    maldi_data_path = main_path + "data/data_exp1.pkl"
     results = main_path + "results_paper/"
 
     # ============ Wandb ===================
@@ -41,18 +41,15 @@ def main(model, config, depth=None, wandbflag=False):
     with open(maldi_data_path, "rb") as handle:
         data = pickle.load(handle)
 
-    maldis_original = data["maldis"] * 1e4
-    y3 = data["labels"]
-    masses_original = np.array(data["masses"])
+    x_train = np.vstack(data["train"]["intensities"] * 1e4)
+    x_train_masses = np.vstack(data["train"]["masses"])
+    y_train = data["train"]["labels"]
+    x_test = np.vstack(data["test"]["intensities"] * 1e4)
+    x_test_masses = np.vstack(data["test"]["masses"])
+    y_test = data["test"]["labels"]
 
     # ============ Preprocess data ===================
-    # Split train and test
-    print("Splitting train and test...")
-    x_train, x_test, y_train, y_test = train_test_split(
-        maldis_original,
-        y3,
-        train_size=0.7,
-    )
+
     if wandbflag:
         # Save number of samples in the dataset
         wandb.log({"Number of samples": len(maldis_original)})
@@ -90,7 +87,7 @@ def main(model, config, depth=None, wandbflag=False):
         pickle.dump(model, open(results + "model.pkl", "wb"))
 
         # Evaluation
-        plot_importances(model, masses_original, results, wandbflag=wandbflag)
+        plot_importances(model, x_train_masses, results, wandbflag=wandbflag)
         pred = model.predict(x_test)
         pred_proba = model.predict_proba(x_test)
 
@@ -116,13 +113,13 @@ def main(model, config, depth=None, wandbflag=False):
             wandb.sklearn.plot_learning_curve(model, x_train, y_train)
 
         # Evaluation
-        plot_importances(model, masses_original, results, wandbflag=wandbflag)
+        plot_importances(model, x_train_masses, results, wandbflag=wandbflag)
 
         plot_tree(
             model,
             x_train,
             y_train,
-            masses_original,
+            x_train_masses,
             results + "train_tree",
             wandbflag=wandbflag,
         )
