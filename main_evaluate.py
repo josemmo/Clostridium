@@ -20,7 +20,7 @@ def main(model, config, depth=None, wandbflag=False):
         config = yaml.load(file, Loader=yaml.FullLoader)
 
     main_path = config["main_path"]
-    maldi_data_path = main_path + "data/data_processed_noreplicas_090502023.pkl"
+    maldi_data_path = main_path + "data/data_exp3.pkl"
     results = main_path + "results_paper/"
 
     # ============ Wandb ===================
@@ -40,28 +40,10 @@ def main(model, config, depth=None, wandbflag=False):
     print("Loading data...")
     with open(maldi_data_path, "rb") as handle:
         data = pickle.load(handle)
-
-    maldis_original = data["maldis"] * 1e4
-    y3 = data["labels"]
-    masses_original = np.array(data["masses"])
-
-    # ============ Preprocess data ===================
-    # Split train and test
-    print("Splitting train and test...")
-    x_train, x_test, y_train, y_test = train_test_split(
-        maldis_original,
-        y3,
-        train_size=0.7,
-    )
-    if wandbflag:
-        # Save number of samples in the dataset
-        wandb.log({"Number of samples": len(maldis_original)})
-        # Save number of features in the dataset
-        wandb.log({"Number of features": len(maldis_original[0])})
-        # Save number of samples in train
-        wandb.log({"Number of samples in train": len(x_train)})
-        # Save number of samples in test
-        wandb.log({"Number of samples in test": len(x_test)})
+    print(data.keys())
+    x_test = np.vstack(data["test"]["intensities"]) * 1e4
+    y_test = data["test"]["labels"]
+    x_masses = np.vstack(np.array(data["test"]["masses"]))
 
     # Check if path "results_paper/model" exists, if not, create it
     if not os.path.exists(results + model):
@@ -69,28 +51,15 @@ def main(model, config, depth=None, wandbflag=False):
         results = results + model + "/"
 
     if model == "base":
-        ros = RandomOverSampler()
-        x_train, y_train = ros.fit_resample(x_train, y_train)
-
-        clf = LazyClassifier(verbose=0, ignore_warnings=True, custom_metric=None)
-        models, predictions = clf.fit(x_train, x_test, y_train, y_test)
-
-        print(models)
+        raise ValueError("Base model not implemented yet")
 
     if model == "rf":
-        from models import RF
-
-        # Declare the model
-        model = RF()
-        # Train it
-        model.fit(x_train, y_train)
-        model = model.get_model()
-
-        # save the model to disk
-        pickle.dump(model, open(results + "model.pkl", "wb"))
+        # Load model from pickle file
+        with open(results + "rf/model.pkl", "rb") as handle:
+            model = pickle.load(handle)
 
         # Evaluation
-        plot_importances(model, masses_original, results, wandbflag=wandbflag)
+        plot_importances(model, x_masses, results, wandbflag=wandbflag)
         pred = model.predict(x_test)
         pred_proba = model.predict_proba(x_test)
 
@@ -103,29 +72,15 @@ def main(model, config, depth=None, wandbflag=False):
         )
 
     elif model == "dt":
-        from models import DecisionTree
-
-        model = DecisionTree(max_depth=depth)
-        model.fit(x_train, y_train)
-        model = model.get_model()
-
-        # save the model to disk
-        pickle.dump(model, open(results + "model.pkl", "wb"))
+        # Load model from pickle file
+        with open(results + "dt/model.pkl", "rb") as handle:
+            model = pickle.load(handle)
 
         if wandbflag:
-            wandb.sklearn.plot_learning_curve(model, x_train, y_train)
+            wandb.sklearn.plot_learning_curve(model, x_test, y_test)
 
         # Evaluation
-        plot_importances(model, masses_original, results, wandbflag=wandbflag)
-
-        plot_tree(
-            model,
-            x_train,
-            y_train,
-            masses_original,
-            results + "train_tree",
-            wandbflag=wandbflag,
-        )
+        plot_importances(model, x_masses, results, wandbflag=wandbflag)
 
         pred = model.predict(x_test)
         pred_proba = model.predict_proba(x_test)

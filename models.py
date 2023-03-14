@@ -21,7 +21,8 @@ class RF:
         ros = RandomOverSampler()
         x_train, y_train = ros.fit_resample(x_train, y_train)
         dfrst = RandomForestClassifier(
-            n_estimators=self.n_estimators, max_depth=self.max_depth
+            n_estimators=self.n_estimators,
+            max_depth=self.max_depth,
         )
         print("Cross-validating using grid search...")
         grid = GridSearchCV(

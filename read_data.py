@@ -11,6 +11,21 @@ def read_data(path, rawpath, data="train"):
     for (dirpath, dirnames, filenames) in os.walk(path):
         listOfFiles += [os.path.join(dirpath, file) for file in filenames]
 
+    if remove_days:
+        # For each path in listoffiles only keep the first 7 folders of the path
+        listOfFiles2 = list(
+        set(["/".join(file.split("/")[:14]) for file in listOfFiles])
+    )
+        for f in listOfFiles2:
+            fulpath = "/".join(f.split("/")[:14])
+            path_to_parent_folder = "/".join(f.split("/")[:12])
+            pocillo = fulpath.split("/")[-1]
+            parent_folder = fulpath.split("/")[-2]
+            # Move the folder up one folder and remove the original folder
+            os.system(f"mv {fulpath} {path_to_parent_folder}/{parent_folder}_{pocillo}/")
+
+
+
     listOfFilesraw = list()
     for (dirpath, dirnames, filenames) in os.walk(rawpath):
         listOfFilesraw += [os.path.join(dirpath, file) for file in filenames]
@@ -111,3 +126,9 @@ def read_data(path, rawpath, data="train"):
         data = {"test": test}
         with open("data/data_exp3.pkl", "wb") as handle:
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        # Read data from the pkl
+        with open("data/data_exp3.pkl", "rb") as handle:
+            data = pickle.load(handle)
+
+        
