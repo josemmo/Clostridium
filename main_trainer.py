@@ -52,18 +52,18 @@ def main(model, config, depth=None, wandbflag=False):
 
     if wandbflag:
         # Save number of samples in the dataset
-        wandb.log({"Number of samples": len(maldis_original)})
+        wandb.log({"Number of samples": len(np.vstack((x_train, x_test)))})
         # Save number of features in the dataset
-        wandb.log({"Number of features": len(maldis_original[0])})
+        wandb.log({"Number of features": len(np.vstack((x_train, x_test)))})
         # Save number of samples in train
         wandb.log({"Number of samples in train": len(x_train)})
         # Save number of samples in test
         wandb.log({"Number of samples in test": len(x_test)})
 
     # Check if path "results_paper/model" exists, if not, create it
-    if not os.path.exists(results + model):
-        os.makedirs(results + model)
-        results = results + model + "/"
+    if not os.path.exists(results + "exp1/" + model + "/"):
+        os.makedirs(results + "exp1/" + model + "/")
+    results = results + "exp1/" + model + "/"
 
     if model == "base":
         ros = RandomOverSampler()
@@ -78,7 +78,7 @@ def main(model, config, depth=None, wandbflag=False):
         from models import RF
 
         # Declare the model
-        model = RF()
+        model = RF(max_depth=depth)
         # Train it
         model.fit(x_train, y_train)
         model = model.get_model()
@@ -98,6 +98,10 @@ def main(model, config, depth=None, wandbflag=False):
             results_path=results,
             wandbflag=wandbflag,
         )
+
+        # Retrain the model with all data and save it
+        model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
+        pickle.dump(model, open(results + "model_all.pkl", "wb"))
 
     elif model == "dt":
         from models import DecisionTree
@@ -134,6 +138,9 @@ def main(model, config, depth=None, wandbflag=False):
             results_path=results,
             wandbflag=wandbflag,
         )
+        model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
+        model = model.get_model()
+        pickle.dump(model, open(results + "model_all.pkl", "wb"))
 
     elif model == "favae":
         raise ValueError("Model not implemented")
@@ -159,3 +166,5 @@ if __name__ == "__main__":
     args = argparse.parse_args()
 
     main(args.model, args.config, depth=args.depth, wandbflag=args.wandb)
+
+    # python main_trainer.py --model rf --config config.yaml

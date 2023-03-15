@@ -46,16 +46,16 @@ def main(model, config, depth=None, wandbflag=False):
     x_masses = np.vstack(np.array(data["test"]["masses"]))
 
     # Check if path "results_paper/model" exists, if not, create it
-    if not os.path.exists(results + model):
-        os.makedirs(results + model)
-        results = results + model + "/"
+    if not os.path.exists(results + "exp3/" + model + "/"):
+        os.makedirs(results + "exp3/" + model + "/")
+    results = results + "exp3/" + model + "/"
 
     if model == "base":
         raise ValueError("Base model not implemented yet")
 
     if model == "rf":
         # Load model from pickle file
-        with open(results + "rf/model.pkl", "rb") as handle:
+        with open(main_path + "results_paper/exp1/rf/model.pkl", "rb") as handle:
             model = pickle.load(handle)
 
         # Evaluation
@@ -73,7 +73,7 @@ def main(model, config, depth=None, wandbflag=False):
 
     elif model == "dt":
         # Load model from pickle file
-        with open(results + "dt/model.pkl", "rb") as handle:
+        with open(main_path + "results_paper/exp1/dt/model.pkl", "rb") as handle:
             model = pickle.load(handle)
 
         if wandbflag:
