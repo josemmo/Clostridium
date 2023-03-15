@@ -139,7 +139,6 @@ def main(model, config, depth=None, wandbflag=False):
             wandbflag=wandbflag,
         )
         model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
-        model = model.get_model()
         pickle.dump(model, open(results + "model_all.pkl", "wb"))
 
     elif model == "favae":

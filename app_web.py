@@ -1,23 +1,35 @@
 import subprocess
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, flash, redirect, url_for
+from werkzeug.utils import secure_filename
 import os
 
+ALLOWED_EXTENSIONS = set(["zip"])
+
+
 app = Flask(__name__)
+app.config["UPLOAD_FOLDER"] = "uploads/"
 
 
 @app.route("/")
-def home():
-    return render_template("index.html")
+def index():
+    return render_template("./index.html")
 
 
-@app.route("/browse_file", methods=["GET", "POST"])
-def browse_file():
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route("/upload")
+def upload_file():
+    return render_template("upload.html")
+
+
+@app.route("/uploader", methods=["GET", "POST"])
+def uploader():
     if request.method == "POST":
-        file_path = request.form["file_path"]
-        dataset_label = file_path
-        dataset_label.replace("/", "\\")
-        return render_template("index.html", dataset_label=dataset_label)
-    return render_template("index.html")
+        f = request.files["file"]
+        f.save(secure_filename(f.filename))
+        return "file uploaded successfully"
 
 
 @app.route("/browse_directory", methods=["GET", "POST"])
