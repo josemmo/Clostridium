@@ -9,6 +9,7 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     accuracy_score,
+    ConfusionMatrixDisplay,
 )
 import pickle
 import numpy as np
@@ -42,16 +43,28 @@ def plot_importances(model, masses_original, path, wandbflag=False):
 def multi_class_evaluation(
     true_value, pred, pred_proba, wandbflag=False, results_path=None
 ):
-    # compute confusion matrix
-    cm = confusion_matrix(true_value, pred)
+    # Check if there is more than one label in true_value
+    if len(np.unique(true_value)) == 1:
+        print("Only one label in true_value, cannot Confusion matrix")
+        cm = None
+        roc_auc = None
+    else:
+        # compute confusion matrix
+        cm = confusion_matrix(true_value, pred)
+        # Store it as png
+        disp = ConfusionMatrixDisplay(
+            confusion_matrix=cm, display_labels=["RT027", "RT181", "Others"]
+        )
+        disp.plot()
+        plt.savefig(results_path + "/confusion_matrix.png")
+        # compute roc auc
+        roc_auc = roc_auc_score(true_value, pred_proba, multi_class="ovr")
     # compute precision, recall and f1-score
     precision = precision_score(true_value, pred, average="macro")
     recall = recall_score(true_value, pred, average="macro")
     f1 = f1_score(true_value, pred, average="macro")
     # compute balanced acc
     balanced_acc = balanced_accuracy_score(true_value, pred)
-    # compute roc auc
-    roc_auc = roc_auc_score(true_value, pred_proba, multi_class="ovr")
     # compute accuracy
     acc = accuracy_score(true_value, pred)
 

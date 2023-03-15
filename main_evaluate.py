@@ -58,7 +58,9 @@ def main(model, config, depth=None, wandbflag=False):
         with open(main_path + "results_paper/exp1/rf/metrics.pkl", "rb") as handle:
             metrics = pickle.load(handle)
         print("Results in experiment 1:")
-        print(metrics)
+        for key in metrics.keys():
+            print(key)
+            print(metrics[key])
 
         # Load model from pickle file
         with open(main_path + "results_paper/exp1/rf/model_all.pkl", "rb") as handle:
@@ -82,7 +84,9 @@ def main(model, config, depth=None, wandbflag=False):
         with open(main_path + "results_paper/exp1/rf/metrics.pkl", "rb") as handle:
             metrics = pickle.load(handle)
         print("Results in experiment 1:")
-        print(metrics)
+        for key in metrics.keys():
+            print(key)
+            print(metrics[key])
 
         # Load model from pickle file
         with open(main_path + "results_paper/exp1/dt/model_all.pkl", "rb") as handle:
