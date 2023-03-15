@@ -54,8 +54,14 @@ def main(model, config, depth=None, wandbflag=False):
         raise ValueError("Base model not implemented yet")
 
     if model == "rf":
+        # Load results from experiment 1 from a pkl
+        with open(main_path + "results_paper/exp1/rf/metrics.pkl", "rb") as handle:
+            metrics = pickle.load(handle)
+        print("Results in experiment 1:")
+        print(metrics)
+
         # Load model from pickle file
-        with open(main_path + "results_paper/exp1/rf/model.pkl", "rb") as handle:
+        with open(main_path + "results_paper/exp1/rf/model_all.pkl", "rb") as handle:
             model = pickle.load(handle)
 
         # Evaluation
@@ -72,8 +78,14 @@ def main(model, config, depth=None, wandbflag=False):
         )
 
     elif model == "dt":
+        # Load results from experiment 1 from a pkl
+        with open(main_path + "results_paper/exp1/rf/metrics.pkl", "rb") as handle:
+            metrics = pickle.load(handle)
+        print("Results in experiment 1:")
+        print(metrics)
+
         # Load model from pickle file
-        with open(main_path + "results_paper/exp1/dt/model.pkl", "rb") as handle:
+        with open(main_path + "results_paper/exp1/dt/model_all.pkl", "rb") as handle:
             model = pickle.load(handle)
 
         if wandbflag:
@@ -85,6 +97,7 @@ def main(model, config, depth=None, wandbflag=False):
         pred = model.predict(x_test)
         pred_proba = model.predict_proba(x_test)
 
+        print("Results in experiment 3:")
         multi_class_evaluation(
             y_test,
             pred,
