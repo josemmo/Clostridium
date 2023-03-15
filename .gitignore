@@ -14,7 +14,7 @@ dev/wandb/
 data/test/
 /checkpoints/
 /wandb/
-/dev/
-/old_dev/
+/old/
+
 
 /results_paper/
