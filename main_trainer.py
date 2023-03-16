@@ -74,7 +74,28 @@ def main(model, config, depth=None, wandbflag=False):
 
         print(models)
 
-    if model == "rf":
+    elif model == "favae":
+        from models import FAVAE
+
+        model = FAVAE(latent_dim=20, epochs=100)
+        model.fit(x_train, y_train)
+
+        # Evaluation
+        pred = model.predict(x_test)
+        pred_proba = model.predict_proba(x_test)
+
+        multi_class_evaluation(
+            y_test,
+            pred,
+            pred_proba,
+            results_path=results,
+            wandbflag=wandbflag,
+        )
+
+        model = model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
+        pickle.dump(model, open(results + "model_all.pkl", "wb"))
+
+    elif model == "rf":
         from models import RF
 
         # Declare the model
@@ -101,6 +122,7 @@ def main(model, config, depth=None, wandbflag=False):
 
         # Retrain the model with all data and save it
         model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
+        model = model.get_model()
         pickle.dump(model, open(results + "model_all.pkl", "wb"))
 
     elif model == "dt":
@@ -139,6 +161,7 @@ def main(model, config, depth=None, wandbflag=False):
             wandbflag=wandbflag,
         )
         model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
+        model = model.get_model()
         pickle.dump(model, open(results + "model_all.pkl", "wb"))
 
     elif model == "favae":

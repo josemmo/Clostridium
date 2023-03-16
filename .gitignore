@@ -15,6 +15,6 @@ data/test/
 /checkpoints/
 /wandb/
 /old/
-
+/favae/__pycache__/
 
 /results_paper/
