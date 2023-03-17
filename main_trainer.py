@@ -47,6 +47,7 @@ def main(model, config, depth=None, wandbflag=False):
     x_test = np.vstack(data["test"]["intensities"] * 1e4)
     x_test_masses = np.vstack(data["test"]["masses"])
     y_test = data["test"]["labels"]
+    x_total_masses = np.vstack((x_train_masses, x_test_masses))
 
     # ============ Preprocess data ===================
 
@@ -63,7 +64,7 @@ def main(model, config, depth=None, wandbflag=False):
     # Check if path "results_paper/model" exists, if not, create it
     if not os.path.exists(results + "exp1/" + model + "/"):
         os.makedirs(results + "exp1/" + model + "/")
-    results = results + "exp1/" + model + "/"
+    results = results + "exp1/" + model
 
     if model == "base":
         ros = RandomOverSampler()
@@ -108,7 +109,18 @@ def main(model, config, depth=None, wandbflag=False):
         pickle.dump(model, open(results + "model.pkl", "wb"))
 
         # Evaluation
-        plot_importances(model, x_train_masses, results, wandbflag=wandbflag)
+        if wandbflag:
+            wandb.sklearn.plot_learning_curve(model, x_train, y_train)
+
+        # Evaluation
+        importances = model.feature_importances_
+        plot_importances(
+            model,
+            importances,
+            x_train_masses,
+            results + "/feature_importance_trainmodel.png",
+            wandbflag=wandbflag,
+        )     
         pred = model.predict(x_test)
         pred_proba = model.predict_proba(x_test)
 
@@ -122,8 +134,60 @@ def main(model, config, depth=None, wandbflag=False):
 
         # Retrain the model with all data and save it
         model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
-        model = model.get_model()
         pickle.dump(model, open(results + "model_all.pkl", "wb"))
+        importances = model.feature_importances_
+        plot_importances(
+            model,
+            importances,
+            x_total_masses,
+            results + "/feature_importance_completemodel.png",
+            wandbflag=wandbflag,
+        )
+
+    elif model == "lr":
+
+        from models import LR
+
+        model = LR()
+        model.fit(x_train, y_train)
+        model = model.get_model()
+
+        # save the model to disk
+        model.save(results + "model.pkl")
+
+        if wandbflag:
+            wandb.sklearn.plot_learning_curve(model, x_train, y_train)
+
+        # Evaluation
+        importances = model.feature_importances_
+        plot_importances(
+            model,
+            importances,
+            x_train_masses,
+            results + "/feature_importance_trainmodel.png",
+            wandbflag=wandbflag,
+        )
+
+        pred = model.predict(x_test)
+        pred_proba = model.predict_proba(x_test)
+
+        multi_class_evaluation(
+            y_test,
+            pred,
+            pred_proba,
+            results_path=results,
+            wandbflag=wandbflag,
+        )
+        model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
+        pickle.dump(model, open(results + "model_all.pkl", "wb"))
+        importances = model.feature_importances_
+        plot_importances(
+            model,
+            importances,
+            x_total_masses,
+            results + "/feature_importance_completemodel.png",
+            wandbflag=wandbflag,
+        )
 
     elif model == "dt":
         from models import DecisionTree
@@ -139,14 +203,12 @@ def main(model, config, depth=None, wandbflag=False):
             wandb.sklearn.plot_learning_curve(model, x_train, y_train)
 
         # Evaluation
-        plot_importances(model, x_train_masses, results, wandbflag=wandbflag)
-
-        plot_tree(
+        importances = model.feature_importances_
+        plot_importances(
             model,
-            x_train,
-            y_train,
+            importances,
             x_train_masses,
-            results + "train_tree",
+            results + "/feature_importance_trainmodel.png",
             wandbflag=wandbflag,
         )
 
@@ -161,8 +223,24 @@ def main(model, config, depth=None, wandbflag=False):
             wandbflag=wandbflag,
         )
         model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
-        model = model.get_model()
         pickle.dump(model, open(results + "model_all.pkl", "wb"))
+        importances = model.feature_importances_
+        plot_importances(
+            model,
+            importances,
+            x_total_masses,
+            results + "/feature_importance_completemodel.png",
+            wandbflag=wandbflag,
+        )
+        print("Plotting final tree...")
+        plot_tree(
+            model,
+            np.vstack((x_train, x_test)),
+            np.hstack((y_train, y_test)),
+            x_total_masses,
+            results + "/complete_tree.svg",
+            wandbflag=wandbflag,
+        )
 
     elif model == "favae":
         raise ValueError("Model not implemented")
@@ -177,7 +255,7 @@ if __name__ == "__main__":
         type=str,
         default="base",
         help="Model to train",
-        choices=["base", "rf", "dt", "favae"],
+        choices=["base", "rf", "dt", "favae", "lr"],
     )
     argparse.add_argument(
         "--config", type=str, default="config.yaml", help="Path to config file"

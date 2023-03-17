@@ -1,6 +1,7 @@
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from imblearn.over_sampling import RandomOverSampler
+from sklearn.linear_model import LogisticRegression
 import numpy as np
 import pickle
 from sklearn.preprocessing import OneHotEncoder
@@ -85,8 +86,11 @@ class RF:
         grid = GridSearchCV(
             estimator=dfrst,
             param_grid={
-                "max_depth": np.arange(2, self.max_depth, 2),
-                "n_estimators": np.arange(64, self.n_estimators, 64),
+                "n_estimators": [100],
+                "max_depth": [2, 4, 6, 8],
+                "min_samples_split": [2, 4, 6],
+                "min_samples_leaf": [1, 2, 4],
+                "max_features": ["auto", "sqrt", "log2"],
             },
             scoring="balanced_accuracy",
             cv=self.cv,
@@ -133,10 +137,61 @@ class DecisionTree:
         print("Cross-validating using grid search...")
         grid = GridSearchCV(
             estimator=clf,
-            param_grid={"max_depth": np.arange(2, self.max_depth, 2)},
+            param_grid={
+                "max_depth": np.arange(2, self.max_depth, 2),
+                "min_samples_split": [2, 4, 6],
+                "min_samples_leaf": [1, 2, 3],
+                "max_features": ["sqrt", "log2"],
+            },
             scoring="balanced_accuracy",
             cv=self.cv,
             verbose=2,
+            n_jobs=-1,
+        )
+        grid_results = grid.fit(x_train, y_train)
+        self.model = grid_results.best_estimator_
+
+    def save(self, path):
+        with open(path, "wb") as handle:
+            pickle.dump(self.model, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load(self, path):
+        with open(path, "rb") as handle:
+            model = pickle.load(handle)
+        self.model = model["model"]
+        return self.model
+
+    def predict(self, x_test):
+        return self.model.predict(x_test)
+
+    def predict_proba(self, x_test):
+        return self.model.predict_proba(x_test)
+
+    def get_model(self):
+        return self.model
+
+
+class LR:
+    def __init__(self):
+        self.cv = 5
+        self.model = None
+
+    def fit(self, x_train, y_train):
+        ros = RandomOverSampler()
+        x_train, y_train = ros.fit_resample(x_train, y_train)
+        lr = LogisticRegression(random_state=0, multi_class="multinomial")
+        print("Cross-validating using grid search...")
+        grid = GridSearchCV(
+            estimator=lr,
+            param_grid={
+                "penalty": ["l1", "l2"],
+                "C": [0.001, 0.01, 0.1, 1.0, 10, 100],
+                "solver": ["newton-cg", "lbfgs", "liblinear", "sag", "saga"],
+            },
+            scoring="balanced_accuracy",
+            cv=self.cv,
+            verbose=2,
+            n_jobs=-1,
         )
         grid_results = grid.fit(x_train, y_train)
         self.model = grid_results.best_estimator_

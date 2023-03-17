@@ -25,17 +25,20 @@ def plot_tree(model, x_train, y_train, masses_original, path, wandbflag=False):
         class_names=["RT027", "RT181", "Others"],
     )
     v = viz_model.view()  # render as SVG into internal object
-    v.save(path + ".svg")  # optionally save as svg
+    print(path)
+    v.save(path)  # optionally save as svg
 
 
-def plot_importances(model, masses_original, path, wandbflag=False):
-    importances = model.feature_importances_
+def plot_importances(model, importances, masses_original, path, wandbflag=False):
     masses = np.mean(masses_original, axis=0)
     plt.figure(figsize=(10, 10))
     plt.plot(masses, importances)
     plt.xlabel("Feature importance")
     plt.ylabel("Feature")
-    plt.savefig(path + "/feature_importance.png")
+    plt.savefig(path)
+    # Dump as a pickle masses and importances
+    results = {"masses": masses, "importances": importances}
+    pickle.dump(results, open(path + ".pkl", "wb"))
     if wandbflag:
         wandb.sklearn.plot_feature_importances(model, masses)
 

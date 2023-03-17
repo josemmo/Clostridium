@@ -62,12 +62,27 @@ def main(model, config, depth=None, wandbflag=False):
             print(key)
             print(metrics[key])
 
+        # Load feature importances from experiment 1
+        with open(
+            main_path
+            + "results_paper/exp1/rf/feature_importance_completemodel.png.pkl",
+            "rb",
+        ) as handle:
+            importances = pickle.load(handle)
+        masses = importances["masses"]
+        importances = importances["importances"]
+        # Sort masses by importances
+        idx = np.argsort(-importances)
+        masses = masses[idx]
+        print("Masses sorted by importance")
+        print(masses)
+        print(importances[idx])
+
         # Load model from pickle file
         with open(main_path + "results_paper/exp1/rf/model_all.pkl", "rb") as handle:
             model = pickle.load(handle)
 
         # Evaluation
-        plot_importances(model, x_masses, results, wandbflag=wandbflag)
         pred = model.predict(x_test)
         pred_proba = model.predict_proba(x_test)
 
@@ -88,6 +103,21 @@ def main(model, config, depth=None, wandbflag=False):
             print(key)
             print(metrics[key])
 
+        with open(
+            main_path
+            + "results_paper/exp1/dt/feature_importance_completemodel.png.pkl",
+            "rb",
+        ) as handle:
+            importances = pickle.load(handle)
+        masses = importances["masses"]
+        importances = importances["importances"]
+        # Sort masses by importances
+        idx = np.argsort(-importances)
+        masses = masses[idx]
+        print("Masses sorted by importance")
+        print(masses)
+        print(importances[idx])
+
         # Load model from pickle file
         with open(main_path + "results_paper/exp1/dt/model_all.pkl", "rb") as handle:
             model = pickle.load(handle)
@@ -96,7 +126,6 @@ def main(model, config, depth=None, wandbflag=False):
             wandb.sklearn.plot_learning_curve(model, x_test, y_test)
 
         # Evaluation
-        plot_importances(model, x_masses, results, wandbflag=wandbflag)
 
         pred = model.predict(x_test)
         pred_proba = model.predict_proba(x_test)
