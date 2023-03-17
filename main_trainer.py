@@ -94,7 +94,7 @@ def main(model, config, depth=None, wandbflag=False):
         )
 
         model = model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
-        pickle.dump(model, open(results + "model_all.pkl", "wb"))
+        pickle.dump(model, open(results + "/model_all.pkl", "wb"))
 
     elif model == "rf":
         from models import RF
@@ -106,7 +106,7 @@ def main(model, config, depth=None, wandbflag=False):
         model = model.get_model()
 
         # save the model to disk
-        pickle.dump(model, open(results + "model.pkl", "wb"))
+        pickle.dump(model, open(results + "/model.pkl", "wb"))
 
         # Evaluation
         if wandbflag:
@@ -120,7 +120,7 @@ def main(model, config, depth=None, wandbflag=False):
             x_train_masses,
             results + "/feature_importance_trainmodel.png",
             wandbflag=wandbflag,
-        )     
+        )
         pred = model.predict(x_test)
         pred_proba = model.predict_proba(x_test)
 
@@ -133,8 +133,10 @@ def main(model, config, depth=None, wandbflag=False):
         )
 
         # Retrain the model with all data and save it
+        model = RF(max_depth=depth)
         model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
-        pickle.dump(model, open(results + "model_all.pkl", "wb"))
+        model = model.get_model()
+        pickle.dump(model, open(results + "/model_all.pkl", "wb"))
         importances = model.feature_importances_
         plot_importances(
             model,
@@ -153,18 +155,26 @@ def main(model, config, depth=None, wandbflag=False):
         model = model.get_model()
 
         # save the model to disk
-        model.save(results + "model.pkl")
+        pickle.dump(model, open(results + "/model.pkl", "wb"))
 
         if wandbflag:
             wandb.sklearn.plot_learning_curve(model, x_train, y_train)
 
         # Evaluation
-        importances = model.feature_importances_
+        importances = model.coef_
+        for i in range(len(importances)):
+            plot_importances(
+                model,
+                importances[i, :],
+                x_train_masses,
+                results + "/feature_importance_trainmodel_class" + str(i) + ".png",
+                wandbflag=wandbflag,
+            )
         plot_importances(
             model,
-            importances,
+            np.mean(importances, axis=0),
             x_train_masses,
-            results + "/feature_importance_trainmodel.png",
+            results + "/feature_importance_trainmodel_mean_all_classes.png",
             wandbflag=wandbflag,
         )
 
@@ -178,14 +188,24 @@ def main(model, config, depth=None, wandbflag=False):
             results_path=results,
             wandbflag=wandbflag,
         )
+        model = LR()
         model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
-        pickle.dump(model, open(results + "model_all.pkl", "wb"))
-        importances = model.feature_importances_
+        model = model.get_model()
+        pickle.dump(model, open(results + "/model_all.pkl", "wb"))
+        importances = model.coef_
+        for i in range(len(importances)):
+            plot_importances(
+                model,
+                importances[i, :],
+                x_train_masses,
+                results + "/feature_importance_completemodel_class" + str(i) + ".png",
+                wandbflag=wandbflag,
+            )
         plot_importances(
             model,
-            importances,
-            x_total_masses,
-            results + "/feature_importance_completemodel.png",
+            np.mean(importances, axis=0),
+            x_train_masses,
+            results + "/feature_importance_completemodel_mean_all_classes.png",
             wandbflag=wandbflag,
         )
 
@@ -197,7 +217,7 @@ def main(model, config, depth=None, wandbflag=False):
         model = model.get_model()
 
         # save the model to disk
-        pickle.dump(model, open(results + "model.pkl", "wb"))
+        pickle.dump(model, open(results + "/model.pkl", "wb"))
 
         if wandbflag:
             wandb.sklearn.plot_learning_curve(model, x_train, y_train)
@@ -222,8 +242,10 @@ def main(model, config, depth=None, wandbflag=False):
             results_path=results,
             wandbflag=wandbflag,
         )
+        model = DecisionTree(max_depth=depth)
         model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
-        pickle.dump(model, open(results + "model_all.pkl", "wb"))
+        model = model.get_model()
+        pickle.dump(model, open(results + "/model_all.pkl", "wb"))
         importances = model.feature_importances_
         plot_importances(
             model,
@@ -232,15 +254,15 @@ def main(model, config, depth=None, wandbflag=False):
             results + "/feature_importance_completemodel.png",
             wandbflag=wandbflag,
         )
-        print("Plotting final tree...")
-        plot_tree(
-            model,
-            np.vstack((x_train, x_test)),
-            np.hstack((y_train, y_test)),
-            x_total_masses,
-            results + "/complete_tree.svg",
-            wandbflag=wandbflag,
-        )
+        # print("Plotting final tree...")
+        # plot_tree(
+        #     model,
+        #     np.vstack((x_train, x_test)),
+        #     np.hstack((y_train, y_test)),
+        #     x_total_masses,
+        #     results + "/complete_tree.svg",
+        #     wandbflag=wandbflag,
+        # )
 
     elif model == "favae":
         raise ValueError("Model not implemented")

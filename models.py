@@ -139,9 +139,9 @@ class DecisionTree:
             estimator=clf,
             param_grid={
                 "max_depth": np.arange(2, self.max_depth, 2),
-                "min_samples_split": [2, 4, 6],
-                "min_samples_leaf": [1, 2, 3],
-                "max_features": ["sqrt", "log2"],
+                # "min_samples_split": [2, 4, 6],
+                # "min_samples_leaf": [1, 2, 3],
+                # "max_features": ["sqrt", "log2"],
             },
             scoring="balanced_accuracy",
             cv=self.cv,
@@ -186,7 +186,7 @@ class LR:
             param_grid={
                 "penalty": ["l1", "l2"],
                 "C": [0.001, 0.01, 0.1, 1.0, 10, 100],
-                "solver": ["newton-cg", "lbfgs", "liblinear", "sag", "saga"],
+                "solver": ["liblinear", "sag"],
             },
             scoring="balanced_accuracy",
             cv=self.cv,

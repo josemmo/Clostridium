@@ -93,10 +93,59 @@ def main(model, config, depth=None, wandbflag=False):
             results_path=results,
             wandbflag=wandbflag,
         )
+        # Train the final model with all data
+        # TODO: Load data from exp1 and retrain the model with all data: exp1+exp3
+
+    elif model == "lr":
+        # Load results from experiment 1 from a pkl
+        with open(main_path + "results_paper/exp1/lr/metrics.pkl", "rb") as handle:
+            metrics = pickle.load(handle)
+        print("Results in experiment 1:")
+        for key in metrics.keys():
+            print(key)
+            print(metrics[key])
+
+        with open(
+            main_path
+            + "results_paper/exp1/lr/feature_importance_completemodel_mean_all_classes.png.pkl",
+            "rb",
+        ) as handle:
+            importances = pickle.load(handle)
+        masses = importances["masses"]
+        importances = importances["importances"]
+        # Sort masses by importances
+        idx = np.argsort(-importances)
+        masses = masses[idx]
+        print("Masses sorted by importance")
+        print(masses)
+        print(importances[idx])
+
+        # Load model from pickle file
+        with open(main_path + "results_paper/exp1/lr/model_all.pkl", "rb") as handle:
+            model = pickle.load(handle)
+
+        if wandbflag:
+            wandb.sklearn.plot_learning_curve(model, x_test, y_test)
+
+        # Evaluation
+
+        pred = model.predict(x_test)
+        pred_proba = model.predict_proba(x_test)
+
+        print("Results in experiment 3:")
+        multi_class_evaluation(
+            y_test,
+            pred,
+            pred_proba,
+            results_path=results,
+            wandbflag=wandbflag,
+        )
+        # Train the final model with all data
+        # TODO: Load data from exp1 and retrain the model with all data: exp1+exp3
 
     elif model == "dt":
         # Load results from experiment 1 from a pkl
-        with open(main_path + "results_paper/exp1/rf/metrics.pkl", "rb") as handle:
+        with open(main_path + "results_paper/exp1/dt/metrics.pkl", "rb") as handle:
             metrics = pickle.load(handle)
         print("Results in experiment 1:")
         for key in metrics.keys():
@@ -126,7 +175,6 @@ def main(model, config, depth=None, wandbflag=False):
             wandb.sklearn.plot_learning_curve(model, x_test, y_test)
 
         # Evaluation
-
         pred = model.predict(x_test)
         pred_proba = model.predict_proba(x_test)
 
@@ -138,6 +186,8 @@ def main(model, config, depth=None, wandbflag=False):
             results_path=results,
             wandbflag=wandbflag,
         )
+        # Train the final model with all data
+        # TODO: Load data from exp1 and retrain the model with all data: exp1+exp3
 
     elif model == "favae":
         raise ValueError("Model not implemented")
@@ -152,7 +202,7 @@ if __name__ == "__main__":
         type=str,
         default="base",
         help="Model to train",
-        choices=["base", "rf", "dt", "favae"],
+        choices=["base", "rf", "dt", "favae", "lr"],
     )
     argparse.add_argument(
         "--config", type=str, default="config.yaml", help="Path to config file"
