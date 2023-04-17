@@ -34,6 +34,9 @@ library("stringr")
 path_train <- args[1]
 path_export <- args[2]
 
+print(path_train)
+print(path_export)
+
 sprintf("Loading MALDI raw data...")
 
 spectra1 <- importBrukerFlex(path_train)

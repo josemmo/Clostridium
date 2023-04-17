@@ -11,7 +11,6 @@ import os
 
 
 def main(model, config, depth=None, wandbflag=False):
-
     # ============ Load config ===================
     print("Loading config")
     with open(
@@ -146,8 +145,21 @@ def main(model, config, depth=None, wandbflag=False):
             wandbflag=wandbflag,
         )
 
-    elif model == "lr":
+    elif model == "dblfs":
+        from models import DBLFS
 
+        # Declare the model
+        pred_proba = []
+        for i in np.arange(y_train.shape[1]):
+            model = DBLFS()
+            # TODO: y_train must be ohe, check it
+            model.fit(x_train, y_train[:, i])
+            pred_proba_i = model.predict_proba(x_test)
+            pred_proba.append(pred_proba_i)
+        pred_proba = np.array(pred_proba).T
+        pred = np.argmax(pred_proba, axis=1)
+
+    elif model == "lr":
         from models import LR
 
         model = LR()
