@@ -62,7 +62,7 @@ class FAVAE:
             x_test, "vae", latent_dim=self.latent_dim, lr=1e-3, dataset="clostri"
         )
         y_pred, Z_test_mean, Z_test_cov = self.model.predict([0], [1], maldis_test)
-        return y_pred
+        return y_pred["output_view1"]["mean_x"]
 
     def get_model(self):
         return self.model

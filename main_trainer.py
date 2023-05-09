@@ -77,22 +77,23 @@ def main(model, config, depth=None, wandbflag=False):
     elif model == "favae":
         from models import FAVAE
 
-        model = FAVAE(latent_dim=20, epochs=100)
-        model.fit(x_train, y_train)
+        model = FAVAE(latent_dim=100, epochs=1000)
+        # model.fit(x_train, y_train)
 
-        # Evaluation
-        pred = model.predict(x_test)
-        pred_proba = model.predict_proba(x_test)
+        # # # Evaluation
+        # pred = model.predict(x_test)
+        # pred_proba = model.predict_proba(x_test)
+        # pred_proba = pred_proba / pred_proba.sum(axis=1)[:, None]
 
-        multi_class_evaluation(
-            y_test,
-            pred,
-            pred_proba,
-            results_path=results,
-            wandbflag=wandbflag,
-        )
+        # multi_class_evaluation(
+        #     y_test,
+        #     pred,
+        #     pred_proba,
+        #     results_path=results,
+        #     wandbflag=wandbflag,
+        # )
 
-        model = model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
+        model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
         pickle.dump(model, open(results + "/model_all.pkl", "wb"))
 
     elif model == "rf":
