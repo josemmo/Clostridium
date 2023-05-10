@@ -74,24 +74,43 @@ def main(model, config, depth=None, wandbflag=False):
 
         print(models)
 
+    elif model == "ksshiba":
+        from models import KSSHIBA
+
+        model = KSSHIBA(kernel="linear", epochs=100, fs=False)
+        model.fit(x_train, y_train)
+
+        # # Evaluation
+        pred = model.predict(x_test)
+        pred_proba = model.predict_proba(x_test)
+        pred_proba = pred_proba / pred_proba.sum(axis=1)[:, None]
+
+        multi_class_evaluation(
+            y_test,
+            pred,
+            pred_proba,
+            results_path=results,
+            wandbflag=wandbflag,
+        )
+
     elif model == "favae":
         from models import FAVAE
 
         model = FAVAE(latent_dim=100, epochs=1000)
-        # model.fit(x_train, y_train)
+        model.fit(x_train, y_train)
 
-        # # # Evaluation
-        # pred = model.predict(x_test)
-        # pred_proba = model.predict_proba(x_test)
-        # pred_proba = pred_proba / pred_proba.sum(axis=1)[:, None]
+        # # Evaluation
+        pred = model.predict(x_test)
+        pred_proba = model.predict_proba(x_test)
+        pred_proba = pred_proba / pred_proba.sum(axis=1)[:, None]
 
-        # multi_class_evaluation(
-        #     y_test,
-        #     pred,
-        #     pred_proba,
-        #     results_path=results,
-        #     wandbflag=wandbflag,
-        # )
+        multi_class_evaluation(
+            y_test,
+            pred,
+            pred_proba,
+            results_path=results,
+            wandbflag=wandbflag,
+        )
 
         model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
         pickle.dump(model, open(results + "/model_all.pkl", "wb"))
@@ -290,7 +309,7 @@ if __name__ == "__main__":
         type=str,
         default="base",
         help="Model to train",
-        choices=["base", "rf", "dt", "favae", "lr"],
+        choices=["base", "rf", "dt", "favae", "lr", "ksshiba"],
     )
     argparse.add_argument(
         "--config", type=str, default="config.yaml", help="Path to config file"

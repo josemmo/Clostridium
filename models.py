@@ -8,6 +8,66 @@ from sklearn.preprocessing import OneHotEncoder
 from favae import favae
 
 
+class KSSHIBA:
+    def __init__(
+        self,
+        kernel="rbf",
+        epochs=100,
+        fs=False,
+    ):
+        self.kernel = kernel
+        self.epochs = epochs
+        self.fs = fs
+        self.model = favae.SSHIBA(100, 1, fs=self.fs)  # Kc and prune
+
+    def fit(self, x_train, y_train):
+        self.x_train = x_train
+        maldis = self.model.struct_data(
+            self.x_train, method="reg", v=self.x_train, kernel=self.kernel
+        )
+
+        # Convert to one hot encoding the labels
+        print("Converting to one hot encoding...")
+        ohe = OneHotEncoder(sparse=False)
+        ohe.fit(y_train.reshape(-1, 1))
+        y_train_ohe = ohe.transform(y_train.reshape(-1, 1))
+        labels = self.model.struct_data(y_train_ohe, "mult")
+
+        print("Training model...")
+        self.model.fit(
+            maldis,
+            labels,
+            max_iter=self.epochs,
+            pruning_crit=1e-5,
+            verbose=1,
+        )
+        return self.model
+
+    def save(self, path):
+        model = {"model": self.model}
+        with open(path, "wb") as handle:
+            pickle.dump(model, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load(self, path):
+        with open(path, "rb") as handle:
+            model = pickle.load(handle)
+        self.model = model["model"]
+        return self.model
+
+    def predict(self, x_test):
+        return np.argmax(self.predict_proba(x_test), axis=1)
+
+    def predict_proba(self, x_test):
+        maldis_test = self.model.struct_data(
+            x_test, method="reg", v=self.x_train, kernel=self.kernel
+        )
+        y_pred, Z_test_mean, Z_test_cov = self.model.predict([0], [1], maldis_test)
+        return y_pred["output_view1"]["mean_x"]
+
+    def get_model(self):
+        return self.model
+
+
 class FAVAE:
     def __init__(
         self,
