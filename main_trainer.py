@@ -77,21 +77,38 @@ def main(model, config, depth=None, wandbflag=False):
     elif model == "ksshiba":
         from models import KSSHIBA
 
-        model = KSSHIBA(kernel="linear", epochs=100, fs=False)
-        model.fit(x_train, y_train)
+        kernel = "linear"
+        epochs = 1000
+        fs = True
 
-        # # Evaluation
-        pred = model.predict(x_test)
-        pred_proba = model.predict_proba(x_test)
-        pred_proba = pred_proba / pred_proba.sum(axis=1)[:, None]
-
-        multi_class_evaluation(
-            y_test,
-            pred,
-            pred_proba,
-            results_path=results,
-            wandbflag=wandbflag,
+        results = (
+            results + "_kernel_" + kernel + "_epochs_" + str(epochs) + "_fs_" + str(fs)
         )
+        # Check if path "results_paper/model" exists, if not, create it
+        if not os.path.exists(results):
+            os.makedirs(results)
+
+        print("Training KSSHIBA")
+        model = KSSHIBA(kernel=kernel, epochs=epochs, fs=fs)
+
+        # model.fit(x_train, y_train)
+
+        # print("Evaluating KSSHIBA")
+        # # # Evaluation
+        # pred = model.predict(x_test)
+        # pred_proba = model.predict_proba(x_test)
+        # pred_proba = pred_proba / pred_proba.sum(axis=1)[:, None]
+
+        # multi_class_evaluation(
+        #     y_test,
+        #     pred,
+        #     pred_proba,
+        #     results_path=results,
+        #     wandbflag=wandbflag,
+        # )
+
+        model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
+        pickle.dump(model, open(results + "/model_all.pkl", "wb"))
 
     elif model == "favae":
         from models import FAVAE
@@ -113,7 +130,8 @@ def main(model, config, depth=None, wandbflag=False):
         )
 
         model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
-        pickle.dump(model, open(results + "/model_all.pkl", "wb"))
+        store = {"model": model, "x_train": x_train, "y_train": y_train}
+        pickle.dump(store, open(results + "/model_all.pkl", "wb"))
 
     elif model == "rf":
         from models import RF

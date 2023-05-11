@@ -1354,14 +1354,9 @@ class SSHIBA(object):
             # mean
             mn = np.zeros((self.n_max, q.Kc))
             for m in np.arange(self.m):
-                # norm_W = q.W[m]['mean'] / q.W[m]['mean'].sum(axis=1)[:, np.newaxis]
                 mn += np.dot(
                     np.subtract(self.X[m]["mean"], q.b[m]["mean"]), q.W[m]["mean"]
                 ) * q.tau_mean(m)
-                # print("Mean of <W> ", m)
-                # print(np.mean(q.W[m]['mean']))
-                # print(np.mean(norm_W))
-                ""
             q.Z["mean"] = self.batchRate(
                 np.dot(mn, q.Z["cov"]), q.Z["mean"], self.latentspace_lr
             )

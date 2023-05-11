@@ -12,7 +12,7 @@ class KSSHIBA:
     def __init__(
         self,
         kernel="rbf",
-        epochs=100,
+        epochs=10000,
         fs=False,
     ):
         self.kernel = kernel
@@ -23,7 +23,7 @@ class KSSHIBA:
     def fit(self, x_train, y_train):
         self.x_train = x_train
         maldis = self.model.struct_data(
-            self.x_train, method="reg", v=self.x_train, kernel=self.kernel
+            self.x_train, method="reg", V=self.x_train, kernel=self.kernel
         )
 
         # Convert to one hot encoding the labels
@@ -59,7 +59,7 @@ class KSSHIBA:
 
     def predict_proba(self, x_test):
         maldis_test = self.model.struct_data(
-            x_test, method="reg", v=self.x_train, kernel=self.kernel
+            x_test, method="reg", V=self.x_train, kernel=self.kernel
         )
         y_pred, Z_test_mean, Z_test_cov = self.model.predict([0], [1], maldis_test)
         return y_pred["output_view1"]["mean_x"]
