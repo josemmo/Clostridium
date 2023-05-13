@@ -74,15 +74,52 @@ def main(model, config, depth=None, wandbflag=False):
 
         print(models)
 
+    elif model == "ksshiba":
+        from models import KSSHIBA
+
+        kernel = "linear"
+        epochs = 1000
+        fs = True
+
+        results = (
+            results + "_kernel_" + kernel + "_epochs_" + str(epochs) + "_fs_" + str(fs)
+        )
+        # Check if path "results_paper/model" exists, if not, create it
+        if not os.path.exists(results):
+            os.makedirs(results)
+
+        print("Training KSSHIBA")
+        model = KSSHIBA(kernel=kernel, epochs=epochs, fs=fs)
+
+        # model.fit(x_train, y_train)
+
+        # print("Evaluating KSSHIBA")
+        # # # Evaluation
+        # pred = model.predict(x_test)
+        # pred_proba = model.predict_proba(x_test)
+        # pred_proba = pred_proba / pred_proba.sum(axis=1)[:, None]
+
+        # multi_class_evaluation(
+        #     y_test,
+        #     pred,
+        #     pred_proba,
+        #     results_path=results,
+        #     wandbflag=wandbflag,
+        # )
+
+        model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
+        pickle.dump(model, open(results + "/model_all.pkl", "wb"))
+
     elif model == "favae":
         from models import FAVAE
 
-        model = FAVAE(latent_dim=20, epochs=100)
+        model = FAVAE(latent_dim=100, epochs=1000)
         model.fit(x_train, y_train)
 
-        # Evaluation
+        # # Evaluation
         pred = model.predict(x_test)
         pred_proba = model.predict_proba(x_test)
+        pred_proba = pred_proba / pred_proba.sum(axis=1)[:, None]
 
         multi_class_evaluation(
             y_test,
@@ -92,8 +129,9 @@ def main(model, config, depth=None, wandbflag=False):
             wandbflag=wandbflag,
         )
 
-        model = model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
-        pickle.dump(model, open(results + "/model_all.pkl", "wb"))
+        model.fit(np.vstack((x_train, x_test)), np.hstack((y_train, y_test)))
+        store = {"model": model, "x_train": x_train, "y_train": y_train}
+        pickle.dump(store, open(results + "/model_all.pkl", "wb"))
 
     elif model == "rf":
         from models import RF
@@ -289,7 +327,7 @@ if __name__ == "__main__":
         type=str,
         default="base",
         help="Model to train",
-        choices=["base", "rf", "dt", "favae", "lr"],
+        choices=["base", "rf", "dt", "favae", "lr", "ksshiba"],
     )
     argparse.add_argument(
         "--config", type=str, default="config.yaml", help="Path to config file"

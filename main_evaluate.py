@@ -11,7 +11,6 @@ import os
 
 
 def main(model, config, depth=None, wandbflag=False):
-
     # ============ Load config ===================
     print("Loading config")
     with open(
@@ -190,7 +189,48 @@ def main(model, config, depth=None, wandbflag=False):
         # TODO: Load data from exp1 and retrain the model with all data: exp1+exp3
 
     elif model == "favae":
-        raise ValueError("Model not implemented")
+        # Load model from pickle file
+        with open(main_path + "results_paper/exp1/favae/model_all.pkl", "rb") as handle:
+            model = pickle.load(handle)
+
+        # Evaluation
+        pred = model.predict(x_test)
+        pred_proba = model.predict_proba(x_test)
+
+        # Make pred_proba to sum 1 in each row
+        pred_proba = pred_proba / pred_proba.sum(axis=1)[:, None]
+
+        multi_class_evaluation(
+            y_test,
+            pred,
+            pred_proba,
+            results_path=results,
+            wandbflag=wandbflag,
+        )
+    elif model == "ksshiba":
+        # Load model from pickle file
+        with open(
+            main_path
+            + "results_paper/exp1/ksshiba_kernel_linear_epochs_1000_fs_True/model_all.pkl",
+            "rb",
+        ) as handle:
+            model = pickle.load(handle)
+
+        # Evaluation
+        pred = model.predict(x_test)
+        pred_proba = model.predict_proba(x_test)
+        print(pred)
+
+        # Make pred_proba to sum 1 in each row
+        pred_proba = pred_proba / pred_proba.sum(axis=1)[:, None]
+
+        multi_class_evaluation(
+            y_test,
+            pred,
+            pred_proba,
+            results_path=results,
+            wandbflag=wandbflag,
+        )
     else:
         raise ValueError("Model not implemented")
 
@@ -202,7 +242,7 @@ if __name__ == "__main__":
         type=str,
         default="base",
         help="Model to train",
-        choices=["base", "rf", "dt", "favae", "lr"],
+        choices=["base", "rf", "dt", "favae", "lr", "ksshiba"],
     )
     argparse.add_argument(
         "--config", type=str, default="config.yaml", help="Path to config file"

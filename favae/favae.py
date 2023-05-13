@@ -138,7 +138,7 @@ class SSHIBA(object):
 
         n = []
         # TODO: quitar este for y hacerlo en una sola linea
-        for (m, arg) in enumerate(args):
+        for m, arg in enumerate(args):
             if arg["kernel"] == "pike":
                 n.append(int(len(arg["data"])))
             else:
@@ -304,7 +304,6 @@ class SSHIBA(object):
                                 np.sum(self.SS_mask[m][:, d])
                                 == self.SS_mask[m].shape[0]
                             ):
-
                                 self.X[m]["mean"][
                                     self.SS_mask[m][:, d], d
                                 ] = np.random.normal(
@@ -939,7 +938,6 @@ class SSHIBA(object):
         return roc_auc.flatten()
 
     def compute_predictions(self, X_tst, m_in=[0], m_out=1, tr=0):
-
         if None in X_tst:
             X_tst = self.X[m_in[0]]
         n_tst = self.n_max - self.n[m_out]
@@ -1015,7 +1013,6 @@ class SSHIBA(object):
             m_out = self.m - 1
         Y_pred = self.compute_predictions(X_tst, m_in=m_in, m_out=m_out, tr=tr)
         if self.method[m_out] == "cat" or self.method[m_out] == "ord":
-
             # Y_pred = label_binarize(Y_pred, classes = np.arange(self.d[m_out]))
             Y_tst_bin = label_binarize(Y_tst["data"], classes=np.arange(self.d[m_out]))
         else:
@@ -1131,11 +1128,11 @@ class SSHIBA(object):
             if self.method[m] == "vae":
                 # Train the VAE
                 if iter_count == 0:
-                    epochs, beta = 20, 0.1
+                    epochs, beta = 20, 1
                 elif iter_count == 5:
-                    epochs, self.keep_training[m] = 5, False
+                    epochs, self.keep_training[m] = 20, False
                 else:
-                    epochs = 5
+                    epochs = 20
 
                 if self.keep_training[m]:
                     self.keep_training[m] = self.vae[m].trainloop(
@@ -1357,14 +1354,9 @@ class SSHIBA(object):
             # mean
             mn = np.zeros((self.n_max, q.Kc))
             for m in np.arange(self.m):
-                # norm_W = q.W[m]['mean'] / q.W[m]['mean'].sum(axis=1)[:, np.newaxis]
                 mn += np.dot(
                     np.subtract(self.X[m]["mean"], q.b[m]["mean"]), q.W[m]["mean"]
                 ) * q.tau_mean(m)
-                # print("Mean of <W> ", m)
-                # print(np.mean(q.W[m]['mean']))
-                # print(np.mean(norm_W))
-                ""
             q.Z["mean"] = self.batchRate(
                 np.dot(mn, q.Z["cov"]), q.Z["mean"], self.latentspace_lr
             )
@@ -1782,7 +1774,6 @@ class SSHIBA(object):
             self.X[m]["prodT"] = np.dot(self.X[m]["mean"].T, self.X[m]["mean"])
 
     def update_tc(self, m):  # Semisupervised categorical
-
         q = self.q_dist
         m_worm = np.dot(q.Z["mean"], q.W[m]["mean"].T) + q.b[m]["mean"]
         for i in np.arange(self.d[m]):
@@ -1862,7 +1853,6 @@ class SSHIBA(object):
                         arg["data"] = self.center_K(arg["data"])
 
                 if type(arg) == dict:
-
                     # NEW FOR IMAGES
                     if arg["method"] == "vae":
                         X_mean, X_cov = self.vae[m_in[m]].update_x(arg["data"])
@@ -1886,7 +1876,7 @@ class SSHIBA(object):
                             arg["data"] - q.b[m_in[m]]["mean"], q.W[m_in[m]]["mean"]
                         ) * q.tau_mean(m_in[m])
                 else:
-                    for (m, x) in enumerate(arg):
+                    for m, x in enumerate(arg):
                         if x["method"] == "cat":  # categorical
                             x["data"] = label_binarize(
                                 x["data"], classes=np.arange(self.d[m_in[m]])
