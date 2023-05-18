@@ -144,4 +144,4 @@ if __name__ == "__main__":
 
     main(args.model, args.config, depth=args.depth, wandbflag=args.wandb)
 
-    # python final_trainer.py --model rf --config config.yaml
+    # python final_trainer.py --model dt --config config.yaml

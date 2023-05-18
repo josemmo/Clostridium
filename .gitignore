@@ -7,6 +7,8 @@ dev/cloverdata
 /results/
 /data_to_predict/
 
+/.vscode/
+
 # Logs
 /logs/
 dev/wandb/

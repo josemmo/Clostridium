@@ -20,7 +20,7 @@ def plot_tree(model, x_train, y_train, masses_original, path, wandbflag=False):
         model,
         X_train=x_train,
         y_train=y_train,
-        feature_names=np.mean(masses_original, axis=0),
+        feature_names=masses_original,
         target_name="Ribotype",
         class_names=["RT027", "RT181", "Others"],
     )
