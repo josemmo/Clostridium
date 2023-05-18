@@ -150,11 +150,12 @@ class RF:
                 "max_depth": [2, 4, 6, 8],
                 "min_samples_split": [2, 4, 6],
                 "min_samples_leaf": [1, 2, 4],
-                "max_features": ["auto", "sqrt", "log2"],
+                "max_features": ["sqrt", "log2"],
             },
             scoring="balanced_accuracy",
             cv=self.cv,
             verbose=2,
+            n_jobs=-1,
         )
         grid_results = grid.fit(x_train, y_train)
         self.model = grid_results.best_estimator_
@@ -199,9 +200,9 @@ class DecisionTree:
             estimator=clf,
             param_grid={
                 "max_depth": np.arange(2, self.max_depth, 2),
-                # "min_samples_split": [2, 4, 6],
-                # "min_samples_leaf": [1, 2, 3],
-                # "max_features": ["sqrt", "log2"],
+                "min_samples_split": [2, 4, 6],
+                "min_samples_leaf": [1, 2, 3],
+                "max_features": ["sqrt", "log2"],
             },
             scoring="balanced_accuracy",
             cv=self.cv,

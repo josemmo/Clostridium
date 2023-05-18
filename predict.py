@@ -53,14 +53,14 @@ def predict(models, data_path, intensities, sample_ids):
             model = pickle.load(handle)
 
         # Predict
-        y_pred = model.predict(intensities)
+        y_pred = np.array(np.array(model.predict(intensities), dtype=int), dtype=str)
         y_pred_proba = model.predict_proba(intensities)
 
         if model_name == "FAVAE":
             y_pred_proba = y_pred_proba / y_pred_proba.sum(axis=1)[:, None]
 
         # Map y_pred: where y_pred is 0, map to RT027, where y_pred is 1, map to RT181, otherwise map to Others
-        y_pred = np.where(y_pred == 0, "RT027", y_pred)
+        y_pred = np.where(y_pred == "0", "RT027", y_pred)
         y_pred = np.where(y_pred == "1", "RT181", y_pred)
         y_pred = np.where(y_pred == "2", "Others", y_pred)
 
@@ -82,7 +82,7 @@ def main(data_path):
     masses, intensities, sample_ids = preprocess_data(data_path, store_preprocess_data)
 
     # Define models to use
-    models = ["DT"]
+    models = ["DT", "RF"]
 
     # Predict
     predict(models, data_path, intensities, sample_ids)

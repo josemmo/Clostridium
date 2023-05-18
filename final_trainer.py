@@ -105,14 +105,6 @@ def main(model, config, depth=None, wandbflag=False):
         model = DecisionTree(max_depth=depth)
         model.fit(x, y)
         model = model.get_model()
-        plot_tree(
-            model,
-            x,
-            y,
-            masses,
-            results + "/complete_tree.svg",
-            wandbflag=wandbflag,
-        )
 
         # save the model to disk
         pickle.dump(model, open(results + "/model_all.pkl", "wb"))
