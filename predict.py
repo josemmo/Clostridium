@@ -39,6 +39,7 @@ def predict(models, data_path, intensities, sample_ids):
     for model_name in models:
         columns.append(model_name)
         columns.append(model_name + " probability")
+
     # Generate a dataframe witht he columns columns=["Sample", "DT", "DT probability", "RF", "RF probability", "FAVAE", "FAVAE probability"] and rows equal to number of samples
     results = pd.DataFrame(columns=columns, index=range(len(intensities)))
     for model_name in models:
@@ -82,7 +83,7 @@ def main(data_path):
     masses, intensities, sample_ids = preprocess_data(data_path, store_preprocess_data)
 
     # Define models to use
-    models = ["DT", "RF"]
+    models = ["DT", "RF", "DBLR-FS"]
 
     # Predict
     predict(models, data_path, intensities, sample_ids)
