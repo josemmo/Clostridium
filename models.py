@@ -6,6 +6,7 @@ import numpy as np
 import pickle
 from sklearn.preprocessing import OneHotEncoder
 from favae import favae
+from dblrfs import DBL_class
 
 
 class KSSHIBA:
@@ -276,3 +277,125 @@ class LR:
 
     def get_model(self):
         return self.model
+
+
+class LR_ARD(object):
+    def __init__(self):
+        pass
+
+    def fit(self, z, y, z_tst = None, y_tst = None,  hyper = None, maxit = 30, 
+            pruning = 8e-2):
+        
+        self.z = z 
+        self.t = y
+        self.z_tst = z_tst  
+        self.t_tst = y_tst 
+        self.pruning = pruning
+        self.maxit = maxit
+
+        print('Loading the data...')
+
+        ones_tr = np.ones((np.shape(self.z)[0],1))
+        ones_test = np.ones((np.shape(self.z_tst)[0],1))
+
+        x_train = np.hstack((self.z,ones_tr))
+        x_test = np.hstack((self.z_tst,ones_test))
+
+        y_train_1 = np.where(self.t==0,1,0)
+        y_train_1 = np.reshape(y_train_1,(np.shape(y_train_1)[0],1))
+        y_train_2 = np.where(self.t==1,1,0)
+        y_train_2 = np.reshape(y_train_2,(np.shape(y_train_2)[0],1))
+        y_train_3 = np.where(self.t==2,1,0)
+        y_train_3 = np.reshape(y_train_3,(np.shape(y_train_3)[0],1))
+
+        y_tst_1 = np.where(self.t_tst==0,1,0)
+        y_tst_1 = np.reshape(y_tst_1,(np.shape(y_tst_1)[0],1))
+        y_tst_2 = np.where(self.t_tst==1,1,0)
+        y_tst_2 = np.reshape(y_tst_2,(np.shape(y_tst_2)[0],1))
+        y_tst_3 = np.where(self.t_tst==2,1,0)
+        y_tst_3 = np.reshape(y_tst_3,(np.shape(y_tst_3)[0],1))
+
+        print('Training the models...')
+
+        self.myModel1 = DBL_class.LR_ARD()
+        self.myModel1.fit(x_train, y_train_1, x_test, y_tst_1,prune = 0,maxit = self.maxit)
+        pesos1 = self.myModel1.return_w()[:-1,:].ravel()
+        maximo1 = np.max(np.abs(pesos1))
+        self.pesos1 = np.where(np.abs(pesos1)<maximo1*self.pruning,0., pesos1)
+
+        self.myModel2 = DBL_class.LR_ARD()
+        self.myModel2.fit(x_train, y_train_2, x_test, y_tst_2,prune = 0, maxit = self.maxit)
+        pesos2 = self.myModel2.return_w()[:-1,:].ravel()
+        maximo2 = np.max(np.abs(pesos2))
+        self.pesos2 = np.where(np.abs(pesos2)<maximo2*self.pruning,0., pesos2)
+
+        self.myModel3 = DBL_class.LR_ARD()
+        self.myModel3.fit(x_train, y_train_3, x_test, y_tst_3,prune = 0, maxit = self.maxit)
+        pesos3 = self.myModel3.return_w()[:-1,:].ravel()
+        maximo3 = np.max(np.abs(pesos3))
+        self.pesos3 = np.where(np.abs(pesos3)<maximo3*self.pruning,0., pesos3)
+    
+    def predict_proba_true(self, Z_tst):
+        ones = np.ones((np.shape(Z_tst)[0],1))
+        Z_tst = np.hstack((Z_tst,ones))
+
+        probs1 = self.myModel1.predict_proba_th(Z_tst,pruning_crit= self.pruning)
+        probs2 = self.myModel2.predict_proba_th(Z_tst,pruning_crit= self.pruning)
+        probs3 = self.myModel3.predict_proba_th(Z_tst,pruning_crit= self.pruning)
+
+        prob_p = np.hstack((probs1,probs2))
+        probs = np.hstack((prob_p,probs3))
+        return probs
+    
+    def predict_proba(self, Z_tst):
+        #Ojo que esto es cutre cutre
+
+        #Calculamos el minimo y maximo de la prob con las salidas de los datos de train
+        probs1 = self.myModel1.predict_proba_th(self.z,pruning_crit= self.pruning)
+        probs2 = self.myModel2.predict_proba_th(self.z,pruning_crit= self.pruning)
+        probs3 = self.myModel3.predict_proba_th(self.z,pruning_crit= self.pruning)
+
+        prob_p = np.hstack((probs1,probs2))
+        probs = np.hstack((prob_p,probs3))
+        #print(probs)
+
+        maximo = np.max(probs.ravel())
+        minimo = np.min(probs.ravel())
+        #print('Maximo: ', maximo)
+        #print('Minimo: ', minimo)
+        #Calculamos las probs del test
+        ones = np.ones((np.shape(Z_tst)[0],1))
+        Z_tst = np.hstack((Z_tst,ones))
+
+        probs1 = self.myModel1.predict_proba_th(Z_tst,pruning_crit= self.pruning)
+        probs2 = self.myModel2.predict_proba_th(Z_tst,pruning_crit= self.pruning)
+        probs3 = self.myModel3.predict_proba_th(Z_tst,pruning_crit= self.pruning)
+
+        prob_p = np.hstack((probs1,probs2))
+        probs = np.hstack((prob_p,probs3))
+        #Normalizamos las probabilidades de salida respecto a los datos de train
+
+        probs_norm = self.normalize_data(probs, maximo, minimo)
+
+        #Chequeamos que ningun casi se ha salido de [0,1]
+        probs_norm = np.where(probs_norm > 1.0, 1.0, probs_norm)
+        probs_norm = np.where(probs_norm < 0.0, 0.0, probs_norm)
+        return probs_norm
+    
+    def predict(self, Z_tst):
+        ones = np.ones((np.shape(Z_tst)[0],1))
+        Z_tst = np.hstack((Z_tst,ones))
+
+        probs = self.predict_proba_true(Z_tst)
+        preds = np.argmax(probs, axis = 1)
+        return preds
+    
+    def return_weights(self):
+        return [self.pesos1, self.pesos2, self.pesos3]
+    
+    def easter_egg(self):
+        print('38.9142,-0.549496')
+
+    def normalize_data(self,X, maximo, minimo):
+        return (X - minimo)/(maximo - minimo)
+
