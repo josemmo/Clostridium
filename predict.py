@@ -79,6 +79,9 @@ def predict(models, data_path, intensities, sample_ids):
 def main(data_path):
     # Preprocess data using R script
     store_preprocess_data = data_path + "/results/data_processed/"
+    # Check if store_preprocess_data exists
+    if not os.path.exists(store_preprocess_data):
+        os.makedirs(store_preprocess_data)
     masses, intensities, sample_ids = preprocess_data(data_path, store_preprocess_data)
 
     # Define models to use
@@ -98,4 +101,4 @@ if __name__ == "__main__":
 
     main(args.data)
 
-    # python final_trainer.py --model rf --config config.yaml
+    # python predict.py --data user_A/Gomez_Ulla

@@ -16,6 +16,8 @@ args <- commandArgs(trailingOnly = TRUE)
 ## MALDIquant()
 ## MALDIquantForeign()
 ##
+dir.create(Sys.getenv("R_LIBS_USER"), recursive = TRUE)  # create personal library
+.libPaths(Sys.getenv("R_LIBS_USER"))  # add to the path
 # install.packages(c("MALDIquant","MALDIquantForeign"), repos = "http://cran.us.r-project.org")
 # install.packages("stringi", dependencies=TRUE, INSTALL_opts = c('--no-lock'), repos = "http://cran.us.r-project.org")
 # install.packages("stringr", dependencies=TRUE, INSTALL_opts = c('--no-lock'), repos = "http://cran.us.r-project.org")
