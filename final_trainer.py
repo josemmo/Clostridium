@@ -27,7 +27,7 @@ def main(model, config, depth=None, wandbflag=False):
     with open(maldi_path, "rb") as handle:
         data = pickle.load(handle)
 
-    x = data["intensities"]
+    x = data["intensities"] * 1e4
     masses = data["masses"]
     y = data["labels"]
 

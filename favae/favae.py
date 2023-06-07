@@ -1098,6 +1098,17 @@ class SSHIBA(object):
         m_cat = 0
         tic = time.time()
         for m in np.arange(self.m):
+            if self.method[m] == "vae":
+                self.keep_training[m] = self.vae[m].trainloop(
+                    img=self.t[m]["data"],
+                    Z=q.Z,
+                    W=q.W[m],
+                    b=q.b[m],
+                    tau=q.tau_mean(m),
+                    epochs=100,
+                    beta=1,
+                    favae=True,
+                )
             self.update_w(m)
 
         self.update_Z()
@@ -1142,7 +1153,7 @@ class SSHIBA(object):
                         b=q.b[m],
                         tau=q.tau_mean(m),
                         epochs=epochs,
-                        beta=10,
+                        beta=beta,
                         favae=True,
                     )
 
