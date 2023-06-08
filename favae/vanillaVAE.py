@@ -208,7 +208,7 @@ class SignalVAE(VAE):
             self.reconstruc_during_training.append(train_rec / len(loader))
             self.KL_QandP.append(train_kl_l / len(loader))
             # Overfitter checker: check if the ELBO is better or worse that previous one
-            # elbo_checker = self.restore_weights(elbo_checker, e)
+            elbo_checker = self.restore_weights(elbo_checker, e)
             # Log the metrics to W&B server
             metrics = {
                 self.dataset + " ELBO": float(self.elbo_training[-1]),

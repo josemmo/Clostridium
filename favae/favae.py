@@ -1098,17 +1098,19 @@ class SSHIBA(object):
         m_cat = 0
         tic = time.time()
         for m in np.arange(self.m):
-            if self.method[m] == "vae":
-                self.keep_training[m] = self.vae[m].trainloop(
-                    img=self.t[m]["data"],
-                    Z=q.Z,
-                    W=q.W[m],
-                    b=q.b[m],
-                    tau=q.tau_mean(m),
-                    epochs=100,
-                    beta=1,
-                    favae=True,
-                )
+            # Updating the mean and variance of the latent variables
+            if iter_count == 0:
+                if self.method[m] == "vae":
+                    self.keep_training[m] = self.vae[m].trainloop(
+                        img=self.t[m]["data"],
+                        Z=q.Z,
+                        W=q.W[m],
+                        b=q.b[m],
+                        tau=q.tau_mean(m),
+                        epochs=100,
+                        beta=1,
+                        favae=True,
+                    )
             self.update_w(m)
 
         self.update_Z()
@@ -1138,8 +1140,9 @@ class SSHIBA(object):
 
             if self.method[m] == "vae":
                 # Train the VAE
+                beta = 1
                 if iter_count == 0:
-                    epochs, beta = 20, 1
+                    epochs = 20
                 elif iter_count == 5:
                     epochs, self.keep_training[m] = 20, False
                 else:

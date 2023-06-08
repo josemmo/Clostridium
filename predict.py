@@ -86,7 +86,7 @@ def main(data_path):
     masses, intensities, sample_ids = preprocess_data(data_path, store_preprocess_data)
 
     # Define models to use
-    models = ["DT", "RF", "DBLFS"]
+    models = ["DT", "RF", "DBLFS", "FAVAE"]
 
     # Predict
     predict(models, data_path, intensities, sample_ids)
