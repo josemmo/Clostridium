@@ -7,7 +7,6 @@ import os
 import pandas as pd
 
 
-@profile
 def preprocess_data(data_path, store_preprocess_data):
     print("Preprocessing data with R script...")
     os.system("Rscript preprocess_maldi.R " + data_path + " " + store_preprocess_data)
@@ -35,7 +34,6 @@ def preprocess_data(data_path, store_preprocess_data):
     return masses, intensities, sample_ids
 
 
-@profile
 def predict(models, data_path, intensities, sample_ids):
     columns = ["Sample"]
     for model_name in models:
@@ -79,7 +77,6 @@ def predict(models, data_path, intensities, sample_ids):
     results.to_csv(path_to_results + "results.csv", index=False)
 
 
-@profile
 def main(data_path):
     # Preprocess data using R script
     store_preprocess_data = data_path + "/results/data_processed/"
@@ -89,7 +86,7 @@ def main(data_path):
     masses, intensities, sample_ids = preprocess_data(data_path, store_preprocess_data)
 
     # Define models to use
-    models = ["DT", "RF", "FAVAE"]
+    models = ["DT", "RF", "DBLFS"]
 
     # Predict
     predict(models, data_path, intensities, sample_ids)
