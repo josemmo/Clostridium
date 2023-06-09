@@ -1,12 +1,8 @@
 import argparse
-from sklearn.model_selection import train_test_split
 import yaml
-from imblearn.over_sampling import RandomOverSampler
 import pickle
 import numpy as np
-from performance_tools import plot_tree, plot_importances, multi_class_evaluation
-import wandb
-from lazypredict.Supervised import LazyClassifier
+from performance_tools import plot_importances
 import os
 
 
@@ -14,7 +10,7 @@ def main(model, config, depth=None, wandbflag=False):
     # ============ Load config ===================
     print("Loading config")
     with open(
-        "/export/usuarios01/alexjorguer/Datos/HospitalProject/Clostridium/" + config
+         config
     ) as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -28,6 +24,7 @@ def main(model, config, depth=None, wandbflag=False):
         data = pickle.load(handle)
 
     x = data["intensities"] * 1e4
+    print(x)
     masses = data["masses"]
     y = data["labels"]
 
@@ -137,7 +134,7 @@ if __name__ == "__main__":
     argparse.add_argument(
         "--config", type=str, default="config.yaml", help="Path to config file"
     )
-    argparse.add_argument("--depth", type=int, default=10, help="Max depth of the tree")
+    argparse.add_argument("--depth", type=int, default=20, help="Max depth of the tree")
     argparse.add_argument("--wandb", type=bool, default=False, help="Use wandb")
 
     args = argparse.parse_args()

@@ -17,8 +17,7 @@ import time
 import logging
 import wandb
 
-sys.path.append("../maldi_PIKE/maldi-learn/maldi_learn")
-from data import MaldiTofSpectrum
+sys.path.append("/export/usuarios01/alexjorguer/Datos/HospitalProject/maldi_PIKE/maldi-learn/maldi_learn")
 from kernels import DiffusionKernel
 
 # Change only this lane to change the VAE used in FA-VAE
@@ -29,12 +28,6 @@ from favae import vanillaVAE as vae
 torch.manual_seed(0)
 np.random.seed(0)
 
-logging.basicConfig(
-    filename="./logs/errors10.log",
-    level=logging.DEBUG,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s",
-)
-logger = logging.getLogger(__name__)
 
 
 class SSHIBA(object):
@@ -1533,14 +1526,6 @@ class SSHIBA(object):
             prod = np.diag(q.W[m]["prodT"])
         q.alpha[m]["b"] = (self.hyper.alpha_b[m] + 0.5 * prod) / (self.d[m])
 
-        if np.any(np.isnan(q.alpha[m]["b"])):
-            logger.error(
-                "ERROR IN UPDATE_ALPHA: alpha[b] has a nan in view view " + str(m)
-            )
-            logger.info(q.alpha[m]["b"])
-        if np.any(np.isnan(q.alpha[m]["a"])):
-            logger.error("ERROR IN UPDATE_ALPHA: alpha[a] has a nan in view" + str(m))
-            logger.info(q.alpha[m]["a"])
 
     def update_tau(self, m):
         """Updates the variable tau.

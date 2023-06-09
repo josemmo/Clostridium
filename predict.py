@@ -23,13 +23,13 @@ def preprocess_data(data_path, store_preprocess_data):
             )
 
             masses.append(aux[:18000, 0])
-            intensities.append(aux[:18000, 1] * 1e4)
+            intensities.append(aux[:18000, 1])
             # The sample id is the name of the csv file
             sample_ids.append(file.split(".")[0])
 
     # Convert to numpy array
     masses = np.array(masses)
-    intensities = np.array(intensities)
+    intensities = np.array(intensities) * 1e4 
     print("Data loaded")
     return masses, intensities, sample_ids
 
@@ -77,7 +77,7 @@ def predict(models, data_path, intensities, sample_ids):
     results.to_csv(path_to_results + "results.csv", index=False)
 
 
-def main(data_path):
+def main(data_path, model_name):
     # Preprocess data using R script
     store_preprocess_data = data_path + "/results/data_processed/"
     # Check if store_preprocess_data exists
@@ -86,7 +86,10 @@ def main(data_path):
     masses, intensities, sample_ids = preprocess_data(data_path, store_preprocess_data)
 
     # Define models to use
-    models = ["DT", "RF", "DBLFS", "FAVAE"]
+    if model_name is None:
+        models = ["DT", "RF", "DBLFS", "FAVAE"]
+    else:
+        models = [model_name]
 
     # Predict
     predict(models, data_path, intensities, sample_ids)
@@ -98,8 +101,11 @@ def main(data_path):
 if __name__ == "__main__":
     argparse = argparse.ArgumentParser()
     argparse.add_argument("--data", type=str, default="rf", help="Path to the data")
+
+    argparse.add_argument("--model", type=str, default=None, help="Model to use")
+
     args = argparse.parse_args()
 
-    main(args.data)
+    main(args.data, args.model)
 
-    # python predict.py --data user_A/Gomez_Ulla
+    # python predict.py --data user_A/Gomez_Ulla --model rf
