@@ -1,4 +1,4 @@
-from pickletools import read_uint2
+
 import numpy as np
 from scipy import linalg
 import copy
@@ -6,7 +6,7 @@ from scipy.stats import norm
 from sklearn.preprocessing import label_binarize
 import math
 import sys
-from sklearn.metrics import balanced_accuracy_score, hamming_loss
+from sklearn.metrics import hamming_loss
 from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import r2_score
@@ -14,8 +14,7 @@ import torch
 from torch import nn, optim
 import pyro.contrib.gp as gp
 import time
-import logging
-import wandb
+# import wandb
 
 sys.path.append("/export/usuarios01/alexjorguer/Datos/HospitalProject/maldi_PIKE/maldi-learn/maldi_learn")
 from kernels import DiffusionKernel
@@ -137,7 +136,7 @@ class SSHIBA(object):
             else:
                 n.append(int(arg["data"].shape[0]))
         self.n_max = np.max(n)
-        self.wandb_obj = [None] * len(n)
+        # self.wandb_obj = [None] * len(n)
         self.n = []
         self.d = []
         self.sparse = []
@@ -526,7 +525,7 @@ class SSHIBA(object):
         self.AUC_tr = []
         self.ACC = []
         self.ACC_tr = []
-        self.wandb_metrics = {}
+        # self.wandb_metrics = {}
         self.m = m + 1
         self.SS_acc = [[0] for m in range(self.m)]
         self.train_acc = [[0] for m in range(self.m)]
@@ -606,13 +605,13 @@ class SSHIBA(object):
             "struct_data".
         """
         #### WANDB information
-        print("Inicializando WANDB")
-        self.wandb = wandb.init(
-            project="kleb_favae",
-            group="1DCNN-MALDIs",
-            job_type="1dcnn_test",
-            entity="alexjorguer",
-        )
+        # print("Inicializando WANDB")
+        # # self.wandb = wandb.init(
+        #     project="kleb_favae",
+        #     group="1DCNN-MALDIs",
+        #     job_type="1dcnn_test",
+        #     entity="alexjorguer",
+        # )
         print("WANDB listo")
         #### WANDB information
         verboseprint = print if verbose else lambda *a, **k: None
@@ -644,7 +643,7 @@ class SSHIBA(object):
                     print(
                         "\nThere are no representative latent factors, no structure found in the data."
                     )
-                    self.wandb.finish()
+                    # # self.wandb.finish()
                     return
             else:
                 self.L.append(self.update_bound())
@@ -668,21 +667,21 @@ class SSHIBA(object):
                     abs(1 - np.mean(self.L[-101:-1]) / self.L[-1]) < tol
                 ):
                     verboseprint("\nModel correctly trained. Convergence achieved")
-                    self.wandb.finish()
+                    # # self.wandb.finish()
                     return
             else:
                 if (len(self.L) > 100) and (
                     abs(1 - np.mean(self.L[-101:-1]) / self.L[-1]) < tol
                 ):
                     verboseprint("\nModel correctly trained. Convergence achieved")
-                    self.wandb.finish()
+                    # self.wandb.finish()
                     return
 
-            self.wandb_metrics["SSHIBA ELBO"] = float(self.L[-1])
-            self.wandb_metrics["K dimensions"] = q.Kc
+            # self.wandb_metrics["SSHIBA ELBO"] = float(self.L[-1])
+            # self.wandb_metrics["K dimensions"] = q.Kc
 
-            self.wandb.log(self.wandb_metrics)
-        self.wandb.finish()
+            # self.wandb.log(# self.wandb_metrics)
+        # self.wandb.finish()
         verboseprint("")
 
     def rbf_kernel_sig(self, X1, X2, sig=0):
@@ -1153,13 +1152,13 @@ class SSHIBA(object):
                         favae=True,
                     )
 
-                    # self.wandb_metrics[self.vae[m].dataset + " ELBO"] = float(
+                    # # self.wandb_metrics[self.vae[m].dataset + " ELBO"] = float(
                     #     self.vae[m].elbo_training[-1]
                     # )
-                    # self.wandb_metrics[self.vae[m].dataset + " MSE"] = float(
+                    # # self.wandb_metrics[self.vae[m].dataset + " MSE"] = float(
                     #     self.vae[m].reconstruc_during_training[-1]
                     # )
-                    # self.wandb_metrics[self.vae[m].dataset + " KL(Q||P)"] = float(
+                    # # self.wandb_metrics[self.vae[m].dataset + " KL(Q||P)"] = float(
                     #     self.vae[m].KL_QandP[-1]
                     # )
 
@@ -1187,13 +1186,13 @@ class SSHIBA(object):
                             favae=True,
                         )
 
-                        # self.wandb_metrics[self.vae[m].dataset + " ELBO"] = float(
+                        # # self.wandb_metrics[self.vae[m].dataset + " ELBO"] = float(
                         #     self.vae[m].elbo_training[-1]
                         # )
-                        # self.wandb_metrics[self.vae[m].dataset + " MSE"] = float(
+                        # # self.wandb_metrics[self.vae[m].dataset + " MSE"] = float(
                         #     -self.vae[m].reconstruc_during_training[-1]
                         # )
-                        # self.wandb_metrics[self.vae[m].dataset + " KL(Q||P)"] = float(
+                        # # self.wandb_metrics[self.vae[m].dataset + " KL(Q||P)"] = float(
                         #     self.vae[m].KL_QandP[-1]
                         # )
 
@@ -1217,7 +1216,7 @@ class SSHIBA(object):
                 #     self.X[m]["mean"], self.X[m]["cov"]
                 # )
                 # r2_train = r2_score(self.t[m]["data"].ravel(), rec_img.ravel())
-                # self.wandb_metrics[
+                # # self.wandb_metrics[
                 #     self.vae[m].dataset + " R2 reconstruction"
                 # ] = r2_train
                 # print(

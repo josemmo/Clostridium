@@ -252,7 +252,7 @@ class SignalVAE(VAE):
             # save checkpoint
             torch.save(
                 checkpoint,
-                "./checkpoints/"
+                "/export/usuarios01/alexjorguer/Datos/HospitalProject/Clostridium/checkpoints/"
                 + self.dataset
                 + "_celeba_vanilla_"
                 + str(self.latentspace_lr)
@@ -263,7 +263,7 @@ class SignalVAE(VAE):
         if self.elbo_training[-1] < elbo_checker:
             print("Restoring best training elbo")
             ckp = torch.load(
-                "./checkpoints/"
+                "/export/usuarios01/alexjorguer/Datos/HospitalProject/Clostridium/checkpoints/"
                 + self.dataset
                 + "_celeba_vanilla_"
                 + str(self.latentspace_lr)

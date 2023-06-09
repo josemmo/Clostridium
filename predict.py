@@ -87,7 +87,7 @@ def main(data_path, model_name):
 
     # Define models to use
     if model_name is None:
-        models = ["DT", "RF", "DBLFS", "FAVAE"]
+        models = ["DT", "RF", "DBLFS", "LR"]
     else:
         models = [model_name]
 
