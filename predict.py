@@ -29,7 +29,7 @@ def preprocess_data(data_path, store_preprocess_data):
 
     # Convert to numpy array
     masses = np.array(masses)
-    intensities = np.array(intensities) * 1e4 
+    intensities = np.array(intensities) * 1e4
     print("Data loaded")
     return masses, intensities, sample_ids
 
@@ -102,7 +102,12 @@ if __name__ == "__main__":
     argparse = argparse.ArgumentParser()
     argparse.add_argument("--data", type=str, default="rf", help="Path to the data")
 
-    argparse.add_argument("--model", type=str, default=None, help="Model to use")
+    argparse.add_argument(
+        "--model",
+        type=str,
+        default=None,
+        help="Model to use, if None, all models are used to predict",
+    )
 
     args = argparse.parse_args()
 
