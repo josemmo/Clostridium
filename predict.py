@@ -99,18 +99,20 @@ def main(data_path, model_name):
 
 
 if __name__ == "__main__":
-    argparse = argparse.ArgumentParser()
-    argparse.add_argument("--data", type=str, default="rf", help="Path to the data")
+    # argparse = argparse.ArgumentParser()
+    # argparse.add_argument("--data", type=str, default="rf", help="Path to the data")
 
-    argparse.add_argument(
-        "--model",
-        type=str,
-        default=None,
-        help="Model to use, if None, all models are used to predict",
-    )
+    # argparse.add_argument(
+    #     "--model",
+    #     type=str,
+    #     default=None,
+    #     help="Model to use, if None, all models are used to predict",
+    # )
 
-    args = argparse.parse_args()
+    # args = argparse.parse_args()
 
-    main(args.data, args.model)
+    # main(args.data, args.model)
+
+    main("user_A/Gomez_Ulla", "DBLFS")
 
     # python predict.py --data user_A/Gomez_Ulla --model rf

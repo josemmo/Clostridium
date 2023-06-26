@@ -97,12 +97,10 @@ class LR_ARD(object):
         fact = np.arange(X.shape[1])[(abs(X.T @ A_mean) > maximo*prune).flatten()].astype(int)
         X = X[:,fact]
         Z_test = Z_test[:,fact]
-        probs = np.zeros((np.shape(Z_test)[0],1))
-        for i in range(np.shape(Z_test)[0]):
-            mean = Z_test[np.newaxis,i,:] @ X.T @ A_mean
-            sig = tau + Z_test[np.newaxis,i,:] @ X.T @ A_cov @ X @ Z_test[np.newaxis,i,:].T
-            prob = self.sigmoid(mean/(np.sqrt(1+(np.pi/8)*sig)))
-            probs[i,0] = prob
+        mean = Z_test @ X.T @ A_mean
+        sig = np.diag(tau + Z_test @ X.T @ A_cov @ X @ Z_test.T).reshape(-1,1)
+        probs = self.sigmoid(mean/(np.sqrt(1+(np.pi/8)*sig)))
+
         return probs
     
     def normalize_data(self,X, maximo, minimo):
