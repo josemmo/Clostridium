@@ -68,6 +68,9 @@ df_train = pd.DataFrame(columns=columns)
 df_test = pd.DataFrame(columns=columns)
 
 for label in df_final["label"].unique():
+    # ESTO NO ESTÁ BIEN, PORQUE HAY REPLICAS. HAY QUE HACERLO POR ID+LABEL PARA ASEGURARME QUE NO ESTÁ EL MISMO ID EN TRAIN Y TEST
+    # PARA ESO HAY QUE TENER EN CUENTA QUE CUANDO HAUA SOLO UNA MUESTRA POR ID, ESTÁ VA EN ENTRENAMIENTO Y NO EN TEST
+    # PONER UN IF PA ESO
     df_temp = df_final[df_final["label"] == label]
     df_temp_train = df_temp.sample(frac=0.8, random_state=42)
     df_temp_test = df_temp.drop(df_temp_train.index)
