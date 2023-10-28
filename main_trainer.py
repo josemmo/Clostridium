@@ -19,7 +19,7 @@ def main(model, config, depth=None, wandbflag=False):
         config = yaml.load(file, Loader=yaml.FullLoader)
 
     main_path = config["main_path"]
-    maldi_data_path = main_path + "data/data_exp1.pkl"
+    # maldi_data_path = main_path + "data/data_exp1.pkl"
     results = main_path + "results_paper/"
 
     # ============ Wandb ===================
@@ -37,16 +37,26 @@ def main(model, config, depth=None, wandbflag=False):
 
     # ============ Load data ===================
     print("Loading data...")
-    with open(maldi_data_path, "rb") as handle:
-        data = pickle.load(handle)
+    maldi_train_path = "data/df_train_exp2.pkl"
+    maldi_test_path = "data/df_test_exp2.pkl"
+    with open(maldi_train_path, "rb") as handle:
+        data_train = pickle.load(handle)
+    with open(maldi_test_path, "rb") as handle:
+        data_test = pickle.load(handle)
 
-    x_train = np.vstack(data["train"]["intensities"] * 1e4)
-    x_train_masses = np.vstack(data["train"]["masses"])
-    y_train = data["train"]["labels"]
-    x_test = np.vstack(data["test"]["intensities"] * 1e4)
-    x_test_masses = np.vstack(data["test"]["masses"])
-    y_test = data["test"]["labels"]
-    x_total_masses = np.vstack((x_train_masses, x_test_masses))
+    x_train = np.array(data_train["intensity"].tolist())
+    y_train = np.array(data_train["label"].tolist())
+    x_test = np.array(data_test["intensity"].tolist())
+    y_test = np.array(data_test["label"].tolist())
+    
+    # Convert the labels: if 027 is 0, if 181 is 1, all the rest is 2
+    y_train[y_train == "027"] = 0
+    y_train[y_train == "181"] = 1
+    y_train[y_train == "other"] = 2
+    y_test[y_test == "027"] = 0
+    y_test[y_test == "181"] = 1
+    y_test[y_test == "other"] = 2
+    
 
     # ============ Preprocess data ===================
 
