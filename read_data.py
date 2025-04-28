@@ -130,5 +130,3 @@ def read_data(path, rawpath, data="train"):
         # Read data from the pkl
         with open("data/data_exp3.pkl", "rb") as handle:
             data = pickle.load(handle)
-
-        

@@ -50,7 +50,7 @@ sprintf("Preprocessing MALDI raw data...")
 spectraint <- transformIntensity(spectra1, method="sqrt")
 # Step 2: smoothing using the Savitzky–Golay algorithm with half-window-size 5 is applied
 spectrasmooth <- smoothIntensity(spectraint, method="SavitzkyGolay", halfWindowSize=5, polynomialOrder=3)
-# Step 3: an estimate of the baseline 
+# Step 3: an estimate of the baseline
 spectrabase <- removeBaseline(spectrasmooth, method="TopHat")
 # Step 4: replicates handling
 # if (replicates>0){
@@ -73,7 +73,7 @@ sprintf("Storing MALDI processed data...")
 # save(spectra1, file=args[2])
 ## Export
 # exportMzMl(spectra_tic, path=path_save)
-for (i in c(1:length(spectra_tic))){ 
+for (i in c(1:length(spectra_tic))) {
     export(spectra_tic[i], file=paste(path_export, str_split(metaData(spectra_tic[[i]])$file, "/", simplify=TRUE)[,10], sep=""), type="csv", force=TRUE)
-    }
+}
 sprintf("MALDI processed data stored at %s", path_export)

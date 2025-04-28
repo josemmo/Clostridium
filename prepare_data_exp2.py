@@ -35,7 +35,7 @@ df_labels = pd.read_excel(pathlabels, header=None)
 for i in range(len(label_list)):
     if label_list[i] is np.nan:
        # Check if exists in df_labels
-        if int(id_list[i]) in df_labels[1].values: 
+        if int(id_list[i]) in df_labels[1].values:
             label_list[i] = df_labels[df_labels[1] == int(id_list[i])][2].values[0]
         else:
             print("Error: id not found in df_labels")
@@ -84,5 +84,3 @@ df_test.to_pickle("data/df_test_exp2.pkl")
 # save them too as csv
 df_train.to_csv("data/df_train_exp2.csv", index=False)
 df_test.to_csv("data/df_test_exp2.csv", index=False)
-
-

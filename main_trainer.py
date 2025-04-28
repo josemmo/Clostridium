@@ -48,7 +48,7 @@ def main(model, config, depth=None, wandbflag=False):
     y_train = np.array(data_train["label"].tolist())
     x_test = np.array(data_test["intensity"].tolist())
     y_test = np.array(data_test["label"].tolist())
-    
+
     # Convert the labels: if 027 is 0, if 181 is 1, all the rest is 2
     y_train[y_train == "027"] = 0
     y_train[y_train == "181"] = 1
@@ -56,7 +56,7 @@ def main(model, config, depth=None, wandbflag=False):
     y_test[y_test == "027"] = 0
     y_test[y_test == "181"] = 1
     y_test[y_test == "other"] = 2
-    
+
 
     # ============ Preprocess data ===================
 

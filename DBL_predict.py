@@ -31,9 +31,9 @@ class LR_ARD(object):
         self.tau1 = tau1
         self.tau2 = tau2
         self.tau3 = tau3
-        
-        
-        
+
+
+
     def predict(self, Z_tst):
         ones = np.ones((np.shape(Z_tst)[0],1))
         Z_tst = np.hstack((Z_tst,ones))
@@ -91,7 +91,7 @@ class LR_ARD(object):
         probs_norm = np.where(probs_norm < 0.0, 0.0, probs_norm)
         return probs_norm
 
-    
+
 
     def predict_proba_one_class(self, Z_test, X, A_mean, A_cov, tau, prune, maximo):
         fact = np.arange(X.shape[1])[(abs(X.T @ A_mean) > maximo*prune).flatten()].astype(int)
@@ -102,15 +102,12 @@ class LR_ARD(object):
         probs = self.sigmoid(mean/(np.sqrt(1+(np.pi/8)*sig)))
 
         return probs
-    
+
     def normalize_data(self,X, maximo, minimo):
         return (X - minimo)/(maximo - minimo)
-    
+
     def sigmoid(self,x):
         if any(x < 0):
             return np.exp(x)/(1 + np.exp(x))
         else:
             return 1/(1 + np.exp(-x))
-
-
-    

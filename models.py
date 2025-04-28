@@ -283,13 +283,13 @@ class LR_ARD(object):
     def __init__(self):
         pass
 
-    def fit(self, z, y, z_tst = None, y_tst = None,  hyper = None, maxit = 30, 
+    def fit(self, z, y, z_tst = None, y_tst = None,  hyper = None, maxit = 30,
             pruning = 8e-2):
-        
-        self.z = z 
+
+        self.z = z
         self.t = y
-        self.z_tst = z_tst  
-        self.t_tst = y_tst 
+        self.z_tst = z_tst
+        self.t_tst = y_tst
         self.pruning = pruning
         self.maxit = maxit
 
@@ -334,7 +334,7 @@ class LR_ARD(object):
         pesos3 = self.myModel3.return_w()[:-1,:].ravel()
         maximo3 = np.max(np.abs(pesos3))
         self.pesos3 = np.where(np.abs(pesos3)<maximo3*self.pruning,0., pesos3)
-    
+
     def predict_proba_true(self, Z_tst):
         ones = np.ones((np.shape(Z_tst)[0],1))
         Z_tst = np.hstack((Z_tst,ones))
@@ -346,7 +346,7 @@ class LR_ARD(object):
         prob_p = np.hstack((probs1,probs2))
         probs = np.hstack((prob_p,probs3))
         return probs
-    
+
     def predict_proba(self, Z_tst):
         #Ojo que esto es cutre cutre
 
@@ -381,7 +381,7 @@ class LR_ARD(object):
         probs_norm = np.where(probs_norm > 1.0, 1.0, probs_norm)
         probs_norm = np.where(probs_norm < 0.0, 0.0, probs_norm)
         return probs_norm
-    
+
     def predict(self, Z_tst):
         ones = np.ones((np.shape(Z_tst)[0],1))
         Z_tst = np.hstack((Z_tst,ones))
@@ -389,13 +389,12 @@ class LR_ARD(object):
         probs = self.predict_proba_true(Z_tst)
         preds = np.argmax(probs, axis = 1)
         return preds
-    
+
     def return_weights(self):
         return [self.pesos1, self.pesos2, self.pesos3]
-    
+
     def easter_egg(self):
         print('38.9142,-0.549496')
 
     def normalize_data(self,X, maximo, minimo):
         return (X - minimo)/(maximo - minimo)
-
